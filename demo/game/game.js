@@ -79,7 +79,8 @@ function init()
         width: gameWidth,
         height: gameHeight,
         scaleX: gameScale,
-        scaleY: gameScale
+        scaleY: gameScale,
+	background:'#000'
     });
 
     //start stage ticker
@@ -94,22 +95,22 @@ function init()
 	        background: '#ffe',
 	        clipChildren: true,
 	        //alpha:0.5,
-	        width:300,
-	        height:300,
-	        //x:300,
-	        //y:300,
-	        //rotation:45
+	        width:400,
+	        height:400,
+	        x:300,
+	        y:300,
+	        rotation:45
 	    }).addTo(stage);
 
     var container = new Hilo.Container({
                 background: '#efe',
                 clipChildren: true,
                 //alpha:0.5,
-                width:200,
-                height:200,
-                x:-100,
+                width:300,
+                height:300,
+                x:0,
                 y:0,
-                //rotation:45
+                rotation:10
             }).addTo(root);
 
 	

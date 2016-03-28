@@ -146,18 +146,17 @@ var WebGLRenderer = Class.create(/** @lends WebGLRenderer.prototype */{
             }else{
                 gl.stencilOp(gl.KEEP,gl.INCR,gl.INCR);
             }
-            
             gl.colorMask(false, false, false, false);
-            
             
             this.notextureShader.active();
             this._renderBackground(target, {r:1,g:1,b:1});
+            this.stencilLevel = this.stencilLevel + 1;
             
             gl.colorMask(true, true, true, true);
-            gl.stencilFunc(gl.LESS,this.stencilLevel,0xFF);
+            gl.stencilFunc(gl.LEQUAL,this.stencilLevel,0xFF);
             gl.stencilOp(gl.KEEP,gl.KEEP,gl.KEEP);
             
-            this.stencilLevel = this.stencilLevel + 1;
+            
         }
       
         
@@ -182,10 +181,12 @@ var WebGLRenderer = Class.create(/** @lends WebGLRenderer.prototype */{
             this._renderBatches();
         }
         if(target.clipChildren){
+            var gl = this.gl;
             this.stencilLevel = this.stencilLevel - 1;
+            gl.stencilFunc(gl.LEQUAL,this.stencilLevel,0xFF);
             if(this.stencilLevel == 0){
                 this._renderBatches();
-                this.gl.disable(this.gl.STENCIL_TEST);
+                gl.disable(this.gl.STENCIL_TEST);
             }
         }
     },
