@@ -98,95 +98,72 @@ var CanvasRenderer = Class.create(/** @lends CanvasRenderer.prototype */{
      * @see Renderer#transform
      */
     transform: function(target){
-        var drawable = target.drawable;
-        if(drawable && drawable.domElement){
-            this.setElementStyleByView(target);
-            return;
-        }
-
         var ctx = this.context,
+            x = target.x,
+            y = target.y,
             scaleX = target.scaleX,
-            scaleY = target.scaleY;
+            scaleY = target.scaleY,
+            pivotX = target.pivotX,
+            pivotY = target.pivotY,
+            rotation = target.rotation % 360;
 
-        if(target === this.stage){
-            var style = this.canvas.style,
-                oldScaleX = target._scaleX,
-                oldScaleY = target._scaleY;
 
-            if((!oldScaleX && scaleX != 1) || (oldScaleX && oldScaleX != scaleX)){
-                target._scaleX = scaleX;
-                style.width = scaleX * target.width + "px";
-            }
-            if((!oldScaleY && scaleY != 1) || (oldScaleY && oldScaleY != scaleY)){
-                target._scaleY = scaleY;
-                style.height = scaleY * target.height + "px";
-            }
-        }else{
-            var x = target.x,
-                y = target.y,
-                pivotX = target.pivotX,
-                pivotY = target.pivotY,
-                rotation = target.rotation % 360;
-                
-
-            //alignment
-            var align = target.align;
-            if(align){
-                if(typeof align === 'function'){
-                    target.align();
-                }else{
-                    var parent = target.parent;
-                    if(parent){
-                        var w = target.width, h = target.height,
-                            pw = parent.width, ph = parent.height;
-                        switch(align){
-                            case 'TL':
-                                x = 0;
-                                y = 0;
-                                break;
-                            case 'T':
-                                x = pw - w >> 1;
-                                y = 0;
-                                break;
-                            case 'TR':
-                                x = pw - w;
-                                y = 0;
-                                break;
-                            case 'L':
-                                x = 0;
-                                y = ph - h >> 1;
-                                break;
-                            case 'C':
-                                x = pw - w >> 1;
-                                y = ph - h >> 1;
-                                break;
-                            case 'R':
-                                x = pw - w;
-                                y = ph - h >> 1;
-                                break;
-                            case 'BL':
-                                x = 0;
-                                y = ph - h;
-                                break;
-                            case 'B':
-                                x = pw - w >> 1;
-                                y = ph - h;
-                                break;
-                            case 'BR':
-                                x = pw - w;
-                                y = ph - h;
-                                break;
-                        }
+        //alignment
+        var align = target.align;
+        if(align){
+            if(typeof align === 'function'){
+                target.align();
+            }else{
+                var parent = target.parent;
+                if(parent){
+                    var w = target.width, h = target.height,
+                        pw = parent.width, ph = parent.height;
+                    switch(align){
+                        case 'TL':
+                            x = 0;
+                            y = 0;
+                            break;
+                        case 'T':
+                            x = pw - w >> 1;
+                            y = 0;
+                            break;
+                        case 'TR':
+                            x = pw - w;
+                            y = 0;
+                            break;
+                        case 'L':
+                            x = 0;
+                            y = ph - h >> 1;
+                            break;
+                        case 'C':
+                            x = pw - w >> 1;
+                            y = ph - h >> 1;
+                            break;
+                        case 'R':
+                            x = pw - w;
+                            y = ph - h >> 1;
+                            break;
+                        case 'BL':
+                            x = 0;
+                            y = ph - h;
+                            break;
+                        case 'B':
+                            x = pw - w >> 1;
+                            y = ph - h;
+                            break;
+                        case 'BR':
+                            x = pw - w;
+                            y = ph - h;
+                            break;
                     }
                 }
             }
-
-            if(x != 0 || y != 0) ctx.translate(x, y);
-            if(rotation != 0) ctx.rotate(rotation * Math.PI / 180);
-            if(scaleX != 1 || scaleY != 1) ctx.scale(scaleX, scaleY);
-            if(pivotX != 0 || pivotY != 0) ctx.translate(-pivotX, -pivotY);
         }
 
+        if(x != 0 || y != 0) ctx.translate(x, y);
+        if(rotation != 0) ctx.rotate(rotation * Math.PI / 180);
+        if(scaleX != 1 || scaleY != 1) ctx.scale(scaleX, scaleY);
+        if(pivotX != 0 || pivotY != 0) ctx.translate(-pivotX, -pivotY);
         if(target.alpha > 0) ctx.globalAlpha *= target.alpha;
     },
 

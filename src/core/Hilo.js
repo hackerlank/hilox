@@ -174,7 +174,15 @@ return {
         BOTTOM: 'B', //bottom & center
         BOTTOM_RIGHT: 'BR' //bottom & right
     },
-
+ 
+    /**
+     * 根据参数id获取一个DOM元素。此方法等价于document.getElementById(id)。
+     * @param {String} id 要获取的DOM元素的id。
+     * @returns {HTMLElement} 一个DOM元素。
+     */
+    getElement: function(id){
+        return doc.getElementById(id);
+    },
     /**
      * 获取DOM元素在页面中的内容显示区域。
      * @param {HTMLElement} elem DOM元素。
@@ -227,14 +235,178 @@ return {
         return elem;
     },
 
-    /**
-     * 根据参数id获取一个DOM元素。此方法等价于document.getElementById(id)。
-     * @param {String} id 要获取的DOM元素的id。
-     * @returns {HTMLElement} 一个DOM元素。
+   /**
+     * 创建一个可渲染的DOM，可指定tagName，如canvas或div。
+     * @param {Object} view 一个可视对象或类似的对象。
+     * @param {Object} imageObj 指定渲染的image及相关设置，如绘制区域rect。
+     * @return {HTMLElement} 新创建的DOM对象。
+     * @private
      */
-    getElement: function(id){
-        return doc.getElementById(id);
+    createDOMDrawable: function(view, imageObj){
+        var tag = view.tagName || "div",
+            img = imageObj.image,
+            w = view.width || (img && img.width),
+            h =  view.height || (img && img.height),
+            elem = Hilo.createElement(tag), 
+            style = elem.style;
+
+        if(view.id) elem.id = view.id;
+        style.position = "absolute";
+        style.left = (view.left || 0) + "px";
+        style.top = (view.top || 0) + "px";
+        style.width = w + "px";
+        style.height = h + "px";
+
+        if(tag == "canvas"){
+            elem.width = w;
+            elem.height = h;
+            if(img){
+                var ctx = elem.getContext("2d");
+                var rect = imageObj.rect || [0, 0, w, h];
+                ctx.drawImage(img, rect[0], rect[1], rect[2], rect[3],
+                             (view.x || 0), (view.y || 0),
+                             (view.width || rect[2]),
+                             (view.height || rect[3]));
+            }
+        }else{
+            style.opacity = view.alpha != undefined ? view.alpha : 1;
+            if(view.clipChildren) style.overflow = 'hidden';
+            if(img && img.src){
+                style.backgroundImage = "url(" + img.src + ")";
+                var bgX = view.rectX || 0, bgY = view.rectY || 0;
+                style.backgroundPosition = (-bgX) + "px " + (-bgY) + "px";
+            }
+        }
+        return elem;
     },
+    /**
+     * 设置可视对象DOM元素的CSS样式。
+     * @param {View} obj 指定要设置CSS样式的可视对象。
+     * @private
+     */
+    setElementStyleByView: function(obj, ignoreView){
+        var prefix = Hilo.browser.jsVendor, px = 'px', flag = false;
+        var parent = obj.parent,
+            drawable = obj.drawable,
+            elem = drawable.domElement,
+            style = elem.style,
+            stateCache = obj._stateCache || (obj._stateCache = {});
+
+        //fix image load bug
+        if(!obj.width && !obj.height){
+            var rect = drawable.rect;
+            if(rect && (rect[2] || rect[3])){
+                obj.width = rect[2];
+                obj.height = rect[3];
+            }
+        }
+        
+        if(parent){
+            var parentElem = parent.drawable && parent.drawable.domElement;
+            if(parentElem && parentElem != elem.parentNode){
+                parentElem.appendChild(elem);
+            }
+        }
+
+        if(this.cacheStateIfChanged(obj, ['visible'], stateCache)){
+            style.display = !obj.visible ? 'none' : '';
+        }
+        if(this.cacheStateIfChanged(obj, ['alpha'], stateCache)){
+            style.opacity = obj.alpha;
+        }
+        if(!obj.visible || obj.alpha <= 0) return;
+
+        if(this.cacheStateIfChanged(obj, ['width'], stateCache)){
+            style.width = obj.width + px;
+        }
+        if(this.cacheStateIfChanged(obj, ['height'], stateCache)){
+            style.height = obj.height + px;
+        }
+        if(this.cacheStateIfChanged(obj, ['depth'], stateCache)){
+            style.zIndex = obj.depth + 1;
+        }
+        if(flag = this.cacheStateIfChanged(obj, ['pivotX', 'pivotY'], stateCache)){
+            var tpx = obj.pivotX, tpy = obj.pivotY;
+            var rect = drawable.rect;
+            if(rect){
+                var sw = rect[2], sh = rect[3], offsetX = rect[4], offsetY = rect[5];
+                if(offsetX || offsetY){
+                    tpx = tpx - (offsetX - sw * 0.5);
+                    tpy = tpy - (offsetY - sh * 0.5);
+                }
+            }
+            style[prefix + 'TransformOrigin'] = tpx + px + ' ' + tpy + px;
+        }
+        if(this.cacheStateIfChanged(obj, ['x', 'y', 'rotation', 'scaleX', 'scaleY'], stateCache) || flag){
+            style[prefix + 'Transform'] = this.getTransformCSS(obj);
+        }
+        
+        if(ignoreView){
+            style.pointerEvents = 'none';
+            return;
+        } 
+        
+        if(!style.pointerEvents){
+            style.pointerEvents = 'none';
+        }
+
+        if(this.cacheStateIfChanged(obj, ['background'], stateCache)){
+            style.backgroundColor = obj.background;
+        }
+        
+        //render image as background
+        var image = drawable.image;
+        if(image){
+            var src = image.src;
+            if(src !== stateCache.image){
+                stateCache.image = src;
+                style.backgroundImage = 'url(' + src + ')';
+            }
+
+            var rect = drawable.rect;
+            if(rect){
+                var sx = rect[0], sy = rect[1];
+                if(sx !== stateCache.sx){
+                    stateCache.sx = sx;
+                    style.backgroundPositionX = -sx + px;
+                }
+                if(sy !== stateCache.sy){
+                    stateCache.sy = sy;
+                    style.backgroundPositionY = -sy + px;
+                }
+            }
+        }
+    },
+
+    /**
+     * @private
+     */
+    cacheStateIfChanged: function(obj, propNames, stateCache){
+        var i, len, name, value, changed = false;
+        for(i = 0, len = propNames.length; i < len; i++){
+            name = propNames[i];
+            value = obj[name];
+            if(value != stateCache[name]){
+                stateCache[name] = value;
+                changed = true;
+            }
+        }
+        return changed;
+    },
+
+    /**
+     * 生成可视对象的CSS变换样式。
+     * @param {View} obj 指定生成CSS变换样式的可视对象。
+     * @returns {String} 生成的CSS样式字符串。
+     */
+    getTransformCSS: function(obj){
+        var use3d = Hilo.browser.supportTransform3D,
+            str3d = use3d ? '3d' : '';
+
+        return 'translate' + str3d + '(' + (obj.x - obj.pivotX) + 'px, ' + (obj.y - obj.pivotY) + (use3d ? 'px, 0px)' : 'px)')
+             + 'rotate' + str3d + (use3d ? '(0, 0, 1, ' : '(') + obj.rotation + 'deg)'
+             + 'scale' + str3d + '(' + obj.scaleX + ', ' + obj.scaleY + (use3d ? ', 1)' : ')');
+    }
 
 
 };

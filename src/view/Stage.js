@@ -115,6 +115,49 @@ var Stage = Class.create(/** @lends Stage.prototype */{
                 break;
         }
     },
+    
+        /**
+     * 覆盖渲染方法。
+     * @private
+     */
+    _render: function(renderer, delta){
+        if((!this.onUpdate || this.onUpdate(delta) !== false) && renderer.startDraw(this)){
+            //transform
+            var w = this.width, h = this.height, scaleX = this.scaleX, scaleY = this.scaleY;
+            var oldW = this._width, oldH = this._height, oldScaleX = this._scaleX, oldScaleY = this._scaleY;
+            var canvas = this.canvas, style = canvas.style;
+
+            if((oldW !== w) || (oldScaleX !== scaleX)){
+                this._width = w;
+                this._scaleX = scaleX;
+                
+                canvas.width = w;
+                style.width = scaleX * w + "px";
+            }
+            if((oldH !== h) || (oldScaleY !== scaleY)){
+                this._height = h;
+                this._scaleY = scaleY;
+                
+                canvas.height = h;
+                style.height = scaleY * h + "px";
+            }
+            
+            
+            
+            var elem = this.drawable && this.drawable.domElement;
+            if(elem){
+                if(!elem.parentNode){
+                    elem.style.overflow = 'hidden';
+                    canvas.appendChild(elem);
+                }
+            }
+                
+            //render
+            this.render(renderer, delta);
+            
+            renderer.endDraw(this);
+        }
+    },
 
     /**
      * 添加舞台画布到DOM容器中。注意：此方法覆盖了View.addTo方法。
@@ -254,6 +297,20 @@ var Stage = Class.create(/** @lends Stage.prototype */{
             this.height = height;
             this.renderer.resize(width, height);
             this.updateViewport();
+        }
+    },
+    
+     /**
+     * 创建DOM Container
+     */
+    setDOMContainer: function(flag){
+        Stage.superclass.setDOMContainer.call(this, flag);
+        
+        if(flag){
+            var elem = this.drawable && this.drawable.domElement;
+            if(elem && !elem.parentNode && this.canvas.parentNode){
+                this.canvas.parentNode.appendChild(elem);
+            }
         }
     }
 

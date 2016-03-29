@@ -46,8 +46,7 @@ var DOMElement = Class.create(/** @lends DOMElement.prototype */{
      */
     _render: function(renderer, delta){
         if(!this.onUpdate || this.onUpdate(delta) !== false){
-            renderer.transform(this);
-            if(this.visible && this.alpha > 0){
+            if(this.visible){
                 this.render(renderer, delta);
             }
         }
@@ -59,20 +58,8 @@ var DOMElement = Class.create(/** @lends DOMElement.prototype */{
      */
     render: function(renderer, delta){
         var canvas = renderer.canvas;
-        if(canvas.getContext){
-            var elem = this.drawable.domElement, depth = this.depth,
-                nextElement = canvas.nextSibling, nextDepth;
-            if(elem.parentNode) return;
-
-            //draw dom element just after stage canvas
-            while(nextElement && nextElement.nodeType != 3){
-                nextDepth = parseInt(nextElement.style.zIndex) || 0;
-                if(nextDepth <= 0 || nextDepth > depth){
-                    break;
-                }
-                nextElement = nextElement.nextSibling;
-            }
-            canvas.parentNode.insertBefore(this.drawable.domElement, nextElement);
+        if(renderer.renderType != 'dom'){
+            Hilo.setElementStyleByView(this);
         }else{
             renderer.draw(this);
         }

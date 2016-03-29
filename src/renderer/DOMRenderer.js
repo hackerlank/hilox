@@ -33,72 +33,22 @@ return Class.create({
     },
     renderType:'dom',
     /**
-     * @private
-     * @see Renderer#startDraw
+     * 为开始绘制可视对象做准备。需要子类来实现。
+     * @param {View} target 要绘制的可视对象。
      */
-    startDraw: function(target){
-        //prepare drawable
+    startDraw: function(target){ 
         var drawable = (target.drawable = target.drawable || new Drawable());
-        var elem = drawable.domElement = (drawable.domElement || createDOMDrawable(target, drawable));
-        
-        if(target.visible != target._visible){
-            elem.style.display = target.visible?null:'none';
-            target._visible = target.visible;
-        }
-        return true;
+        drawable.domElement = (drawable.domElement || Hilo.createDOMDrawable(target, drawable));
+
+        return target.visible; 
     },
 
     /**
-     * @private
-     * @see Renderer#draw
+     * 绘制可视对象。需要子类来实现。
+     * @param {View} target 要绘制的可视对象。
      */
     draw: function(target){
-        var parent = target.parent,
-            targetElem = target.drawable.domElement,
-            currentParent = targetElem.parentNode;
-
-        if(parent){
-            var parentElem = parent.drawable.domElement;
-            if(parentElem != currentParent){
-                parentElem.appendChild(targetElem);
-            }
-            //fix image load bug
-            if(!target.width && !target.height){
-                var rect = target.drawable.rect;
-                if(rect && (rect[2] || rect[3])){
-                    target.width = rect[2];
-                    target.height = rect[3];
-                }
-            }
-        }
-        else if(target === this.stage && !currentParent){
-            targetElem.style.overflow = 'hidden';
-            this.canvas.appendChild(targetElem);
-        }
-    },
-
-    /**
-     * @private
-     * @see Renderer#transform
-     */
-    transform: function(target){
-        this.setElementStyleByView(target);
-        if(target === this.stage){
-            var style = this.canvas.style,
-                oldScaleX = target._scaleX,
-                oldScaleY = target._scaleY,
-                scaleX = target.scaleX,
-                scaleY = target.scaleY;
-
-            if((!oldScaleX && scaleX != 1) || (oldScaleX && oldScaleX != scaleX)){
-                target._scaleX = scaleX;
-                style.width = scaleX * target.width + "px";
-            }
-            if((!oldScaleY && scaleY != 1) || (oldScaleY && oldScaleY != scaleY)){
-                target._scaleY = scaleY;
-                style.height = scaleY * target.height + "px";
-            }
-        }
+        Hilo.setElementStyleByView(target);
     },
 
 
@@ -116,50 +66,7 @@ return Class.create({
     }
 });
 
-/**
- * 创建一个可渲染的DOM，可指定tagName，如canvas或div。
- * @param {Object} view 一个可视对象或类似的对象。
- * @param {Object} imageObj 指定渲染的image及相关设置，如绘制区域rect。
- * @return {HTMLElement} 新创建的DOM对象。
- * @private
- */
-function createDOMDrawable(view, imageObj){
-    var tag = view.tagName || "div",
-        img = imageObj.image,
-        w = view.width || (img && img.width),
-        h =  view.height || (img && img.height),
-        elem = Hilo.createElement(tag), 
-        style = elem.style;
 
-    if(view.id) elem.id = view.id;
-    style.position = "absolute";
-    style.left = (view.left || 0) + "px";
-    style.top = (view.top || 0) + "px";
-    style.width = w + "px";
-    style.height = h + "px";
-
-    if(tag == "canvas"){
-        elem.width = w;
-        elem.height = h;
-        if(img){
-            var ctx = elem.getContext("2d");
-            var rect = imageObj.rect || [0, 0, w, h];
-            ctx.drawImage(img, rect[0], rect[1], rect[2], rect[3],
-                         (view.x || 0), (view.y || 0),
-                         (view.width || rect[2]),
-                         (view.height || rect[3]));
-        }
-    }else{
-        style.opacity = view.alpha != undefined ? view.alpha : 1;
-        if(view === this.stage || view.clipChildren) style.overflow = "hidden";
-        if(img && img.src){
-            style.backgroundImage = "url(" + img.src + ")";
-            var bgX = view.rectX || 0, bgY = view.rectY || 0;
-            style.backgroundPosition = (-bgX) + "px " + (-bgY) + "px";
-        }
-    }
-    return elem;
-}
 
 })();
 

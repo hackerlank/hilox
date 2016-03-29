@@ -6,6 +6,7 @@
 (function(window){
 var Hilo = window.Hilo;
 var Class = Hilo.Class;
+var Drawable = Hilo.Drawable;
 var View = Hilo.View;
 /**
  * Hilo
@@ -20,6 +21,7 @@ var View = Hilo.View;
  * @module hilo/view/Container
  * @requires hilo/core/Hilo
  * @requires hilo/core/Class
+ * @requires hilo/core/Drawable
  * @requires hilo/view/View
  * @property {Array} children 容器的子元素列表。只读。
  * @property {Boolean} pointerChildren 指示容器的子元素是否能响应用户交互事件。默认为true。
@@ -81,6 +83,10 @@ var Container = Class.create(/** @lends Container.prototype */{
             var endIndex = childIndex < index ? index : childIndex;;
             this._updateChildren(startIndex, endIndex + 1);
         }
+        
+        if(child.drawable && child.drawable.domElement){
+            this.setDOMContainer(true);
+        }
 
         return this;
     },
@@ -119,6 +125,8 @@ var Container = Class.create(/** @lends Container.prototype */{
                     parentElem.removeChild(elem);
                 }
                 drawable.domElement = null;
+                
+                this.setDOMContainer(false);
             }
 
             child.parent = null;
@@ -336,12 +344,57 @@ var Container = Class.create(/** @lends Container.prototype */{
      */
     render: function(renderer, delta){
         Container.superclass.render.call(this, renderer, delta);
+        
+        if(renderer.renderType != 'dom' && this.drawable && this.drawable.domElement){
+            Hilo.setElementStyleByView(this, true);
+        }
 
         var children = this.children.slice(0), i, len, child;
         for(i = 0, len = children.length; i < len; i++){
             child = children[i];
             //NOTE: the child could remove or change it's parent
             if(child.parent === this) child._render(renderer, delta);
+        }
+    },
+    
+    /**
+     * 创建DOM Container
+     */
+    setDOMContainer: function(flag){
+        //TODO !!!
+        //if(renderer.renderType == 'dom') return;
+        
+        var parent = this.parent, drawable = this.drawable, elem = drawable && drawable.domElement;
+        if(flag){
+            var drawable = (this.drawable = this.drawable || new Drawable());
+            drawable.domElement = (drawable.domElement || Hilo.createElement('div', {
+                style: {
+                    position: 'absolute'
+                }}));
+            
+            if(parent) parent.setDOMContainer(true);
+        }else{
+            var find = false;
+            for(i = 0, len = children.length; i < len; i++){
+                child = children[i];
+                if(child.drawable && child.drawable.domElement){
+                    find = true;
+                    break;
+                }
+            }
+            if(!find){
+                if(elem){
+                    if(elem){
+                        var parentElem = elem.parentNode;
+                        if(parentElem){
+                            parentElem.removeChild(elem);
+                        }
+                        drawable.domElement = null;
+                        this.drawable = null;
+                    }
+                }
+                if(parent) parent.setDOMContainer(false);
+            }
         }
     }
 

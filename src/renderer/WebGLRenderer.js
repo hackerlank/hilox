@@ -109,6 +109,8 @@ var WebGLRenderer = Class.create(/** @lends WebGLRenderer.prototype */{
             if(target === this.stage){
                 this.clear();
             }
+            target.__webglWorldMatrix = target.__webglWorldMatrix||new Matrix(1, 0, 0, 1, 0, 0);
+            target.__webglRenderAlpha = target.__webglRenderAlpha||1;
             return true;
         }
         return false;
@@ -195,32 +197,8 @@ var WebGLRenderer = Class.create(/** @lends WebGLRenderer.prototype */{
      * @see Renderer#transform
      */
     transform: function(target){
-        var drawable = target.drawable;
-        if(drawable && drawable.domElement){
-            this.setElementStyleByView(target);
-            return;
-        }
-
+        this._setConcatenatedMatrix(target, target.parent);
         
-        if(target === this.stage){
-            var scaleX = target.scaleX, scaleY = target.scaleY, oldScaleX = target._scaleX, oldScaleY = target._scaleY;
-            var style = this.canvas.style;
-                
-
-            if((!oldScaleX && scaleX != 1) || (oldScaleX && oldScaleX != scaleX)){
-                target._scaleX = scaleX;
-                style.width = scaleX * target.width + "px";
-            }
-            if((!oldScaleY && scaleY != 1) || (oldScaleY && oldScaleY != scaleY)){
-                target._scaleY = scaleY;
-                style.height = scaleY * target.height + "px";
-            }
-            target.__webglWorldMatrix = target.__webglWorldMatrix||new Matrix(1, 0, 0, 1, 0, 0);
-        }else{
-            target.__webglWorldMatrix = target.__webglWorldMatrix||new Matrix(1, 0, 0, 1, 0, 0);
-            this._setConcatenatedMatrix(target, target.parent);
-        }
-
         if(target.alpha > 0) {
             if(target.parent && target.parent.__webglRenderAlpha){
                 target.__webglRenderAlpha = target.alpha * target.parent.__webglRenderAlpha;

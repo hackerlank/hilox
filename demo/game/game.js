@@ -17,71 +17,90 @@ renderTypeElem.style.cssText = 'position:absolute;right:5px;top:5px;z-index:9999
 document.getElementsByTagName('body')[0].appendChild(renderTypeElem);
 
 var renderTypeList = ['canvas', 'dom', 'webgl'];
-renderTypeList.forEach(function(type)
-{
+renderTypeList.forEach(function(type){
     var typeElem = document.createElement('div');
     typeElem.innerHTML = '<input type="radio" data-type="{type}">{type}</input>'.replace(/{type}/g, type);
     typeElem.setAttribute('data-type', type);
     typeElem.style.cssText = 'display:inline;margin-left:10px;line-height:20px;cursor:pointer;height:40px;';
     typeElem.input = typeElem.children[0];
     renderTypeElem.appendChild(typeElem);
-    if(type === renderType)
-    {
+    if(type === renderType){
         typeElem.input.checked = true;
     }
 
-    typeElem.onclick = function()
-    {
-        if(renderType !== type)
-        {
+    typeElem.onclick = function(){
+        if(renderType !== type){
             location.search = type;
         }
     }
 });
 
 
+var game = {}
 
-var winWidth = (window.innerWidth || document.documentElement.clientWidth);
-var winHeight = (window.innerHeight || document.documentElement.clientHeight);
+function onResize(){
+	var winWidth = (window.innerWidth || document.documentElement.clientWidth);
+	var winHeight = (window.innerHeight || document.documentElement.clientHeight);
 
-var gameX = 0;
-var gameY = 0;
-var gameScale = 1.0;
-var gameWidth = 480;
-var gameHeight = 800;
+	var gameX = 0;
+	var gameY = 0;
+	var gameScale = 1.0;
+	var gameWidth = 540;
+	var gameHeight = 800;
 
 
-if(winWidth/winHeight > gameWidth/gameHeight)
-{//fix h
-   gameScale = winHeight/gameHeight;
-   gameX = (winWidth - gameWidth * gameScale)/2.0;
-   gameY = 0.0;
+	if(winWidth/winHeight > gameWidth/gameHeight)
+	{//fix h
+	   gameScale = winHeight/gameHeight;
+	   gameX = (winWidth - gameWidth * gameScale)/2.0;
+	   gameY = 0.0;
+	}
+	else
+	{//fix w
+	   gameScale = winWidth/gameWidth;
+	   gameY = (winHeight - gameHeight * gameScale)/2.0;
+	   gameX = 0.0;
+	}
+
+	var gameContainer = document.getElementById("game-container");
+	gameContainer.style.height = (gameHeight * gameScale) + 'px';
+	gameContainer.style.width = (gameWidth * gameScale) + 'px';
+	gameContainer.style["margin-left"] = gameX + 'px';
+	gameContainer.style["margin-top"] = gameY + 'px';
+
+
+    game.winWidth = winWidth;
+    game.winHeight = winHeight;
+    game.x = gameX;
+    game.y = gameY;
+    game.w = gameWidth;
+    game.h = gameHeight;
+    game.scale = gameScale;
+    game.container = gameContainer;
+
+    var stage = game.stage;
+    if(stage){
+        stage.width = game.w;
+        stage.height = game.h;
+        stage.scaleX = game.scale;
+        stage.scaleY = game.scale;
+    }
 }
-else
-{//fix w
-   gameScale = winWidth/gameWidth;
-   gameY = (winHeight - gameHeight * gameScale)/2.0;
-   gameX = 0.0;
-}
 
-var gameContainer = document.getElementById("game-container");
-gameContainer.style.height = (gameHeight * gameScale) + 'px';
-gameContainer.style.width = (gameWidth * gameScale) + 'px';
-gameContainer.style["margin-left"] = gameX + 'px';
-gameContainer.style["margin-top"] = gameY + 'px';
+function onLoad(){
+    onResize();
 
-function init()
-{
     //init stage
     var stage = new Hilo.Stage({
         renderType: renderType,
-        container: gameContainer,
-        width: gameWidth,
-        height: gameHeight,
-        scaleX: gameScale,
-        scaleY: gameScale,
+        container: game.container,
+        width: game.w,
+        height: game.h,
+        scaleX: game.scale,
+        scaleY: game.scale,
 	background:'#000'
     });
+    game.stage = stage;
 
     //start stage ticker
     var ticker = new Hilo.Ticker(20);
@@ -185,5 +204,59 @@ function init()
     }).on(Hilo.event.POINTER_END, function(e){
         console.log(e.type, this);
     });
+
+
+//static bitmap
+            var bmp = new Hilo.Bitmap({
+                image: 'images/fish.png',
+                rect: [0, 0, 174, 126],
+                x: 75,
+                y: 20
+            }).addTo(stage);
+
+            //dom element
+            var blueRect = new Hilo.DOMElement({
+                id: 'blueRect',
+                element: Hilo.createElement('div', {
+                    style: {
+                        backgroundColor: '#004eff',
+                        position: 'absolute'
+                    }
+                }),
+                width: 100,
+                height: 100,
+                x: 50,
+                y: 70
+            }).addTo(stage);
+
+            //dom element
+            var yellowRect = new Hilo.DOMElement({
+                id: 'yellowRect',
+                element: Hilo.createElement('div', {
+                    style: {
+                        backgroundColor: '#ff0',
+                        position: 'absolute'
+                    }
+                }),
+                width: 100,
+                height: 100,
+                x: 80,
+                y: 100
+            }).addTo(stage);
+
+            //dom element
+            var redRect = new Hilo.DOMElement({
+                id: 'redRect',
+                element: Hilo.createElement('div', {
+                    style: {
+                        backgroundColor: '#f00',
+                        position: 'absolute',
+                    }
+                }),
+                width: 100,
+                height: 100,
+                x: 110,
+                y: 130
+            }).addTo(stage);
 
 }
