@@ -255,8 +255,10 @@ function onLoad(){
                 }),
                 width: 100,
                 height: 100,
-                x: 110,
-                y: 130
-            }).addTo(stage);
+                x: -50,
+                y: 0
+            }).addTo(container);
+
+
 
 }

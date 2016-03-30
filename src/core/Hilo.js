@@ -17,7 +17,9 @@
  */
 var Hilo = (function(){
 
-var win = window, doc = document, docElem = doc.documentElement,
+var win = window, 
+    doc = document, 
+    docElem = doc.documentElement,
     uid = 0;
 
 return {
@@ -28,11 +30,7 @@ return {
      */
     getUid: function(prefix){
         var id = ++uid;
-        if(prefix){
-            var charCode = prefix.charCodeAt(prefix.length - 1);
-            if (charCode >= 48 && charCode <= 57) prefix += "_"; //0至9之间添加下划线
-            return prefix + id;
-        }
+        if(prefix) return prefix + "_" + id;
         return id;
     },
 
@@ -71,8 +69,6 @@ return {
      * <ul>
      * <li><b>jsVendor</b> - 浏览器厂商CSS前缀的js值。比如：webkit。</li>
      * <li><b>cssVendor</b> - 浏览器厂商CSS前缀的css值。比如：-webkit-。</li>
-     * <li><b>supportTransform</b> - 是否支持CSS Transform变换。</li>
-     * <li><b>supportTransform3D</b> - 是否支持CSS Transform 3D变换。</li>
      * <li><b>supportStorage</b> - 是否支持本地存储localStorage。</li>
      * <li><b>supportTouch</b> - 是否支持触碰事件。</li>
      * <li><b>supportCanvas</b> - 是否支持canvas元素。</li>
@@ -108,26 +104,8 @@ return {
         }catch(e){ };
 
         //vendro prefix
-        var jsVendor = data.jsVendor = data.webkit ? 'webkit' : data.firefox ? 'Moz' : data.opera ? 'O' : data.ie ? 'ms' : '';
-        var cssVendor = data.cssVendor = '-' + jsVendor + '-';
-
-        //css transform/3d feature dectection
-        var testElem = doc.createElement('div'), style = testElem.style;
-        var supportTransform = style[jsVendor + 'Transform'] != undefined;
-        var supportTransform3D = style[jsVendor + 'Perspective'] != undefined;
-        if(supportTransform3D){
-            testElem.id = 'test3d';
-            style = doc.createElement('style');
-            style.textContent = '@media ('+ cssVendor +'transform-3d){#test3d{height:3px}}';
-            doc.head.appendChild(style);
-
-            docElem.appendChild(testElem);
-            supportTransform3D = testElem.offsetHeight == 3;
-            doc.head.removeChild(style);
-            docElem.removeChild(testElem);
-        };
-        data.supportTransform = supportTransform;
-        data.supportTransform3D = supportTransform3D;
+        data.jsVendor = data.webkit ? 'webkit' : data.firefox ? 'Moz' : data.opera ? 'O' : data.ie ? 'ms' : '';
+        data.cssVendor = '-' + data.jsVendor + '-';
 
         return data;
     })(),
@@ -198,9 +176,9 @@ return {
 
         var offsetX = ((win.pageXOffset || docElem.scrollLeft) - (docElem.clientLeft || 0)) || 0;
         var offsetY = ((win.pageYOffset || docElem.scrollTop) - (docElem.clientTop || 0)) || 0;
-        var styles = win.getComputedStyle ? getComputedStyle(elem) : elem.currentStyle;
-        var parseIntFn = parseInt;
+        var styles = win.getComputedStyle ? win.getComputedStyle(elem) : elem.currentStyle;
 
+        var parseIntFn = parseInt;
         var padLeft = (parseIntFn(styles.paddingLeft) + parseIntFn(styles.borderLeftWidth)) || 0;
         var padTop = (parseIntFn(styles.paddingTop) + parseIntFn(styles.borderTopWidth)) || 0;
         var padRight = (parseIntFn(styles.paddingRight) + parseIntFn(styles.borderRightWidth)) || 0;
@@ -235,50 +213,6 @@ return {
         return elem;
     },
 
-   /**
-     * 创建一个可渲染的DOM，可指定tagName，如canvas或div。
-     * @param {Object} view 一个可视对象或类似的对象。
-     * @param {Object} imageObj 指定渲染的image及相关设置，如绘制区域rect。
-     * @return {HTMLElement} 新创建的DOM对象。
-     * @private
-     */
-    createDOMDrawable: function(view, imageObj){
-        var tag = view.tagName || "div",
-            img = imageObj.image,
-            w = view.width || (img && img.width),
-            h =  view.height || (img && img.height),
-            elem = Hilo.createElement(tag), 
-            style = elem.style;
-
-        if(view.id) elem.id = view.id;
-        style.position = "absolute";
-        style.left = (view.left || 0) + "px";
-        style.top = (view.top || 0) + "px";
-        style.width = w + "px";
-        style.height = h + "px";
-
-        if(tag == "canvas"){
-            elem.width = w;
-            elem.height = h;
-            if(img){
-                var ctx = elem.getContext("2d");
-                var rect = imageObj.rect || [0, 0, w, h];
-                ctx.drawImage(img, rect[0], rect[1], rect[2], rect[3],
-                             (view.x || 0), (view.y || 0),
-                             (view.width || rect[2]),
-                             (view.height || rect[3]));
-            }
-        }else{
-            style.opacity = view.alpha != undefined ? view.alpha : 1;
-            if(view.clipChildren) style.overflow = 'hidden';
-            if(img && img.src){
-                style.backgroundImage = "url(" + img.src + ")";
-                var bgX = view.rectX || 0, bgY = view.rectY || 0;
-                style.backgroundPosition = (-bgX) + "px " + (-bgY) + "px";
-            }
-        }
-        return elem;
-    },
     /**
      * 设置可视对象DOM元素的CSS样式。
      * @param {View} obj 指定要设置CSS样式的可视对象。
@@ -325,6 +259,9 @@ return {
         if(this.cacheStateIfChanged(obj, ['depth'], stateCache)){
             style.zIndex = obj.depth + 1;
         }
+        if(this.cacheStateIfChanged(obj, ['clipChildren'], stateCache)){
+            style.overflow = obj.clipChildren?'hidden':null;
+        }
         if(flag = this.cacheStateIfChanged(obj, ['pivotX', 'pivotY'], stateCache)){
             var tpx = obj.pivotX, tpy = obj.pivotY;
             var rect = drawable.rect;
@@ -338,7 +275,9 @@ return {
             style[prefix + 'TransformOrigin'] = tpx + px + ' ' + tpy + px;
         }
         if(this.cacheStateIfChanged(obj, ['x', 'y', 'rotation', 'scaleX', 'scaleY'], stateCache) || flag){
-            style[prefix + 'Transform'] = this.getTransformCSS(obj);
+            style[prefix + 'Transform'] = 'translate(' + (obj.x - obj.pivotX) + 'px, ' + (obj.y - obj.pivotY) + 'px)' +
+                                          'rotate(' + obj.rotation + 'deg)' +
+                                          'scale(' + obj.scaleX + ', ' + obj.scaleY + ')';
         }
         
         if(ignoreView){
@@ -393,21 +332,6 @@ return {
         }
         return changed;
     },
-
-    /**
-     * 生成可视对象的CSS变换样式。
-     * @param {View} obj 指定生成CSS变换样式的可视对象。
-     * @returns {String} 生成的CSS样式字符串。
-     */
-    getTransformCSS: function(obj){
-        var use3d = Hilo.browser.supportTransform3D,
-            str3d = use3d ? '3d' : '';
-
-        return 'translate' + str3d + '(' + (obj.x - obj.pivotX) + 'px, ' + (obj.y - obj.pivotY) + (use3d ? 'px, 0px)' : 'px)')
-             + 'rotate' + str3d + (use3d ? '(0, 0, 1, ' : '(') + obj.rotation + 'deg)'
-             + 'scale' + str3d + '(' + obj.scaleX + ', ' + obj.scaleY + (use3d ? ', 1)' : ')');
-    }
-
 
 };
 

@@ -83,14 +83,7 @@ var Stage = Class.create(/** @lends Stage.prototype */{
 
         if(!canvas){
             var canvasTagName = renderType === 'dom'?'div':'canvas';
-            canvas = Hilo.createElement(canvasTagName, {
-                style: {
-                    position: 'absolute'
-                }
-            });
-        }
-        else if(!canvas.getContext){
-            renderType = 'dom';
+            canvas = Hilo.createElement(canvasTagName, {style: {position: 'absolute', overflow: 'hidden'}});
         }
 
         this.canvas = canvas;

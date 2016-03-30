@@ -367,10 +367,7 @@ var Container = Class.create(/** @lends Container.prototype */{
         var parent = this.parent, drawable = this.drawable, elem = drawable && drawable.domElement;
         if(flag){
             var drawable = (this.drawable = this.drawable || new Drawable());
-            drawable.domElement = (drawable.domElement || Hilo.createElement('div', {
-                style: {
-                    position: 'absolute'
-                }}));
+            drawable.domElement = (drawable.domElement || Hilo.createElement('div', {style: {position: 'absolute'}}));
             
             if(parent) parent.setDOMContainer(true);
         }else{

@@ -38,7 +38,7 @@ return Class.create({
      */
     startDraw: function(target){ 
         var drawable = (target.drawable = target.drawable || new Drawable());
-        drawable.domElement = (drawable.domElement || Hilo.createDOMDrawable(target, drawable));
+        drawable.domElement = (drawable.domElement || Hilo.createElement('div', {style: {position: 'absolute'}}));
 
         return target.visible; 
     },
