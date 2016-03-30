@@ -58,8 +58,7 @@ var Stage = Class.create(/** @lends Stage.prototype */{
         this._initRenderer(properties);
 
         //init size
-        var width = this.width, height = this.height,
-            viewport = this.updateViewport();
+        var width = this.width, height = this.height, viewport = this.updateViewport();
         if(!properties.width) width = (viewport && viewport.width) || 320;
         if(!properties.height) height = (viewport && viewport.height) || 480;
         this.resize(width, height, true);
@@ -145,6 +144,7 @@ var Stage = Class.create(/** @lends Stage.prototype */{
                 }
             }
                 
+            renderer.clear(0, 0, this.width, this.height);
             //render
             this.render(renderer, delta);
             
@@ -174,7 +174,22 @@ var Stage = Class.create(/** @lends Stage.prototype */{
             this._render(this.renderer, delta);
         }
     },
-
+    
+    /**
+     * 改变舞台的大小。
+     * @param {Number} width 指定舞台新的宽度。
+     * @param {Number} height 指定舞台新的高度。
+     * @param {Boolean} forceResize 指定是否强制改变舞台大小，即不管舞台大小是否相同，仍然强制执行改变动作，可确保舞台、画布以及视窗之间的尺寸同步。
+     */
+    resize: function(width, height, forceResize){
+        if(forceResize || this.width !== width || this.height !== height){
+            this.width = width;
+            this.height = height;
+            this.renderer.resize(width, height);
+            this.updateViewport();
+        }
+    },
+    
     /**
      * 开启/关闭舞台的DOM事件响应。要让舞台上的可视对象响应用户交互，必须先使用此方法开启舞台的相应事件的响应。
      * @param {String|Array} type 要开启/关闭的事件名称或数组。
@@ -278,32 +293,17 @@ var Stage = Class.create(/** @lends Stage.prototype */{
         return viewport;
     },
 
-    /**
-     * 改变舞台的大小。
-     * @param {Number} width 指定舞台新的宽度。
-     * @param {Number} height 指定舞台新的高度。
-     * @param {Boolean} forceResize 指定是否强制改变舞台大小，即不管舞台大小是否相同，仍然强制执行改变动作，可确保舞台、画布以及视窗之间的尺寸同步。
-     */
-    resize: function(width, height, forceResize){
-        if(forceResize || this.width !== width || this.height !== height){
-            this.width = width;
-            this.height = height;
-            this.renderer.resize(width, height);
-            this.updateViewport();
-        }
-    },
+
     
      /**
      * 创建DOM Container
      */
-    setDOMContainer: function(flag){
-        Stage.superclass.setDOMContainer.call(this, flag);
+    _domContainerUpdate: function(){
+        Stage.superclass._domContainerUpdate.call(this);
         
-        if(flag){
-            var elem = this.drawable && this.drawable.domElement;
-            if(elem && !elem.parentNode && this.canvas.parentNode){
-                this.canvas.parentNode.appendChild(elem);
-            }
+        var elem = this.drawable && this.drawable.domElement;
+        if(elem && !elem.parentNode && this.canvas.parentNode){
+            this.canvas.parentNode.appendChild(elem);
         }
     }
 

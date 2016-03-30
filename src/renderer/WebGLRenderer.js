@@ -106,9 +106,6 @@ var WebGLRenderer = Class.create(/** @lends WebGLRenderer.prototype */{
      */
     startDraw: function(target){
         if(target.visible && target.alpha > 0){
-            if(target === this.stage){
-                this.clear();
-            }
             target.__webglWorldMatrix = target.__webglWorldMatrix||new Matrix(1, 0, 0, 1, 0, 0);
             target.__webglRenderAlpha = target.__webglRenderAlpha||1;
             return true;
@@ -123,15 +120,8 @@ var WebGLRenderer = Class.create(/** @lends WebGLRenderer.prototype */{
     draw: function(target){
         var drawable = target.drawable, 
             image = drawable && drawable.image,
-            rect = drawable && drawable.rect,
-            bg = target.background,
-            w = target.width, 
-            h = target.height;
+            bg = target.background;
         
-        if(rect && !w && !h){//fix width/height TODO: how to get rid of this?
-            w = target.width = rect[2];
-            h = target.height = rect[3];
-        }
 
         if(this.batchIndex >= this.maxBatchNum || bg){
             this._renderBatches();
@@ -169,7 +159,7 @@ var WebGLRenderer = Class.create(/** @lends WebGLRenderer.prototype */{
         }
         if(image){
             this.defaultShader.active();
-            this._renderImage(target, image, rect);
+            this._renderImage(target, image, drawable.rect);
         }
         
     },
@@ -271,9 +261,8 @@ var WebGLRenderer = Class.create(/** @lends WebGLRenderer.prototype */{
             this.activeShader.uploadTexture(image);
         }
         
-        var gl = this.gl;
+        var gl = this.gl, w = target.width, h = target.height, px = -target.pivotX, py = -target.pivotY;
         var sw = rect[2], sh = rect[3], offsetX = rect[4], offsetY = rect[5];
-        var w = target.width, h = target.height, px = -target.pivotX, py = -target.pivotY;
         if(offsetX || offsetY){
             px = px + offsetX - sw * 0.5;
             py = py + offsetY - sh * 0.5;

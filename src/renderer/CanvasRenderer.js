@@ -39,9 +39,6 @@ var CanvasRenderer = Class.create(/** @lends CanvasRenderer.prototype */{
      */
     startDraw: function(target){
         if(target.visible && target.alpha > 0){
-            if(target === this.stage){
-                this.clear(0, 0, target.width, target.height);
-            }
             this.context.save();
             
             return true;
@@ -72,16 +69,10 @@ var CanvasRenderer = Class.create(/** @lends CanvasRenderer.prototype */{
         //draw image
         var drawable = target.drawable, image = drawable && drawable.image;
         if(image){
-            var rect = drawable.rect, sw = rect[2], sh = rect[3], offsetX = rect[4], offsetY = rect[5];
-            if(!w && !h){
-                //fix width/height TODO: how to get rid of this?
-                w = target.width = sw;
-                h = target.height = sh;
-            }
+            var rect = drawable.rect, offsetX = rect[4], offsetY = rect[5];
             //the pivot is the center of frame if has offset, otherwise is (0, 0)
-            if(offsetX || offsetY) 
-                ctx.translate(offsetX - sw * 0.5, offsetY - sh * 0.5);
-            ctx.drawImage(image, rect[0], rect[1], sw, sh, 0, 0, w, h);
+            if(offsetX || offsetY) ctx.translate(offsetX - sw * 0.5, offsetY - sh * 0.5);
+            ctx.drawImage(image, rect[0], rect[1], rect[2], rect[3], 0, 0, w, h);
         }
     },
 

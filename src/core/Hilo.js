@@ -35,20 +35,6 @@ return {
     },
 
     /**
-     * 为指定的可视对象生成一个包含路径的字符串表示形式。如Stage1.Container2.Bitmap3。
-     * @param {View} view 指定的可视对象。
-     * @returns {String} 可视对象的字符串表示形式。
-     */
-    viewToString: function(view){
-        var result, obj = view;
-        while(obj){
-            result = result ? (obj.id + '.' + result) : obj.id;
-            obj = obj.parent;
-        }
-        return result;
-    },
-
-    /**
      * 简单的浅复制对象。
      * @param {Object} target 要复制的目标对象。
      * @param {Object} source 要复制的源对象。
@@ -225,15 +211,6 @@ return {
             elem = drawable.domElement,
             style = elem.style,
             stateCache = obj._stateCache || (obj._stateCache = {});
-
-        //fix image load bug
-        if(!obj.width && !obj.height){
-            var rect = drawable.rect;
-            if(rect && (rect[2] || rect[3])){
-                obj.width = rect[2];
-                obj.height = rect[3];
-            }
-        }
         
         if(parent){
             var parentElem = parent.drawable && parent.drawable.domElement;
@@ -251,10 +228,10 @@ return {
         if(!obj.visible || obj.alpha <= 0) return;
 
         if(this.cacheStateIfChanged(obj, ['width'], stateCache)){
-            style.width = obj.width + px;
+            style.width = (obj.width||0) + px;
         }
         if(this.cacheStateIfChanged(obj, ['height'], stateCache)){
-            style.height = obj.height + px;
+            style.height = (obj.height||0) + px;
         }
         if(this.cacheStateIfChanged(obj, ['depth'], stateCache)){
             style.zIndex = obj.depth + 1;

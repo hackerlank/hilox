@@ -194,9 +194,6 @@ var Sprite = Class.create(/** @lends Sprite.prototype */{
             callback && callback.call(this);
         }
 
-        //NOTE: it will be deprecated, don't use it.
-        if(this.onEnterFrame) this.onEnterFrame(frameIndex);
-
         this.drawable.init(this._frames[frameIndex]);
         Sprite.superclass._render.call(this, renderer, delta);
     },
@@ -246,14 +243,7 @@ var Sprite = Class.create(/** @lends Sprite.prototype */{
         frame = this.getFrame(frame);
         if(frame) frame.callback = callback;
         return this;
-    },
-
-    /**
-     * 精灵动画的播放头进入新帧时的回调方法。默认值为null。此方法已废弃，请使用addFrameCallback方法。
-     * @type Function
-     * @deprecated
-     */
-    onEnterFrame: null
+    }
 
 });
 Hilo.Sprite = Sprite;

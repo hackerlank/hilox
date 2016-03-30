@@ -294,5 +294,12 @@ function onLoad(){
                 y: 0
             }).addTo(container);
 
-
+//text view
+            var text = new Hilo.Text({
+                text: "生命在他里头，这生命就是人的光。光照在黑暗里，黑暗却不接受光。 (《新约.约翰福音》第1章)\nWhat has come into being in him was life, and the life was the light of all people. The light shines in the darkness, and the darkness did not overcome it. John 1-4,5",
+                width: 300,
+                height: 300,
+                x: 40,
+                y: 350
+            }).addTo(stage);
 }

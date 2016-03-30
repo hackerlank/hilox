@@ -79,9 +79,7 @@ return Class.create(/** @lends View.prototype */{
     getStage: function(){
         var obj = this, parent;
         while(parent = obj.parent) obj = parent;
-        //NOTE: don't use `instanceof` to prevent circular module requirement.
-        //But it's not a very reliable way to check it's a stage instance.
-        if(obj.canvas) return obj;
+        if(obj.canvas && obj.renderer) return obj;
         return null;
     },
 
@@ -122,7 +120,19 @@ return Class.create(/** @lends View.prototype */{
         if(parent) parent.removeChild(this);
         return this;
     },
-
+    /**
+     * 修正自身width&height
+     */
+    fixSize: function(){
+        //fix width/height
+        if(!(this.width && this.height)){
+            var rect = this.drawable && this.drawable.rect;
+            if(rect){
+                target.width = (target.width || rect[2]);
+                target.height = (target.height || rect[3]);
+            }
+        }
+    },
     /**
      * 获取可视对象在舞台全局坐标系内的外接矩形以及所有顶点坐标。
      * @returns {Array} 可视对象的顶点坐标数组vertexs。另vertexs还包含属性：
@@ -286,16 +296,23 @@ return Class.create(/** @lends View.prototype */{
      * @param {Number} delta 渲染时时间偏移量。
      */
     render: function(renderer, delta){
+        this.fixSize();
         renderer.draw(this);
     },
 
     /**
-     * 返回可视对象的字符串表示。
-     * @returns {String} 可视对象的字符串表示。
+     * 为指定的可视对象生成一个包含路径的字符串表示形式。如Stage1.Container2.Bitmap3。
+     * @param {View} view 指定的可视对象。
+     * @returns {String} 可视对象的字符串表示形式。
      */
     toString: function(){
-        return Hilo.viewToString(this);
-    }
+        var result, obj = this;
+        while(obj){
+            result = result ? (obj.id + '.' + result) : obj.id;
+            obj = obj.parent;
+        }
+        return result;
+    },
 });
 
 /**

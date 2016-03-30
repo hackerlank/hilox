@@ -6,8 +6,8 @@
 (function(window){
 var Hilo = window.Hilo;
 var Class = Hilo.Class;
+var Drawable = Hilo.Drawable;
 var View = Hilo.View;
-
     
     
 var _cacheCanvas = Hilo.createElement('canvas');
@@ -27,6 +27,7 @@ var _cacheContext = _cacheCanvas && _cacheCanvas.getContext('2d');
  * @module hilo/view/Text
  * @requires hilo/core/Class
  * @requires hilo/core/Hilo
+ * @requires hilo/core/Drawable
  * @requires hilo/view/View
  * @property {String} text 指定要显示的文本内容。
  * @property {String} color 指定使用的字体颜色。
@@ -47,7 +48,8 @@ var Text = Class.create(/** @lends Text.prototype */{
         Text.superclass.constructor.call(this, properties);
 
         // if(!properties.width) this.width = 200; //default width
-        if(!properties.font) this.font = '12px arial'; //default font style
+        if(!properties.font) this.font = '16px arial'; //default font style
+        if(properties.width && this.maxWidth > properties.width) this.maxWidth = properties.width;
         this._fontHeight = Text.measureFontHeight(this.font);
     },
 
@@ -57,41 +59,44 @@ var Text = Class.create(/** @lends Text.prototype */{
     textVAlign: null,
     outline: false,
     lineSpacing: 0,
-    maxWidth: 200,
+    maxWidth: 500,
     font: null, //ready-only
     textWidth: 0, //read-only
     textHeight: 0, //read-only
     
-    cacheDirty:true,
     /**
      * 缓存到图片里。可用来提高渲染效率。
      * @param {Boolean} forceUpdate 是否强制更新缓存
      */
-    cache: function(forceUpdate){
-        if(forceUpdate || this._cacheDirty || !this._cacheImage){
-            this.updateCache();
+    cache: function(){
+        var dirty = true;
+        
+        if(this._text !== this.text){
+            this._text = this.text;
+            dirty = true;
+        }
+        if(this._color !== this.color){
+            this._color = this.color;
+            dirty = true;
+        }
+        if(this._font !== this.font){
+            this._font = this.font;
+            dirty = true;
+        }
+        
+        if(dirty){
+            _cacheCanvas.width = this.width || this.maxWidth;
+            _cacheCanvas.height = this.height || 800;
+            _cacheContext.clearRect(0, 0, _cacheCanvas.width, _cacheCanvas.height);
+            this._draw(_cacheContext);
+            this._cacheImage = new Image();
+            this._cacheImage.src = _cacheCanvas.toDataURL();
+            this.drawable = this.drawable||new Drawable();
+            this.drawable.init(this._cacheImage);
+            console.log(JSON.stringify(this.drawable),this.width, this.height)
         }
     },
-    /**
-     * 更新缓存
-     */
-    updateCache:function(){
-        //TODO:width, height自动判断
-        _cacheCanvas.width = this.width;
-        _cacheCanvas.height = this.height;
-        this._draw(_cacheContext);
-        this._cacheImage = new Image();
-        this._cacheImage.src = _cacheCanvas.toDataURL();
-        this.drawable = this.drawable||new Drawable();
-        this.drawable.init(this._cacheImage);
-        this.cacheDirty = false;
-    },
-    /**
-     * 设置缓存是否dirty
-     */
-    setCacheDirty:function(dirty){
-        this._cacheDirty = dirty;
-    },
+
 
     /**
      * 设置文本的字体CSS样式。
@@ -103,9 +108,7 @@ var Text = Class.create(/** @lends Text.prototype */{
         if(me.font !== font){
             me.font = font;
             me._fontHeight = Text.measureFontHeight(font);
-            me.setCacheDirty(true);
         }
-
         return me;
     },
 
@@ -127,15 +130,17 @@ var Text = Class.create(/** @lends Text.prototype */{
             style.font = me.font;
             style.textAlign = me.textAlign;
             style.color = me.color;
-            style.width = me.width + 'px';
-            style.height = me.height + 'px';
+            style.width = (me.width || me.maxWidth) + 'px';
+            style.height = me.height? me.height + 'px':null;
             style.lineHeight = (me._fontHeight + me.lineSpacing) + 'px';
-
-            domElement.innerHTML = me.text;
+            style['word-break'] = 'break-all';
+            style['word-wrap'] = 'break-word';
+            if(me._text !== me.text){
+                domElement.innerHTML = me.text.replace("\n","</br>");
+            }
             renderer.draw(this);
         }
         else{
-            //TODO:自动更新cache
             me.cache();
             renderer.draw(me);
         }
@@ -202,25 +207,27 @@ var Text = Class.create(/** @lends Text.prototype */{
 
         me.textWidth = width;
         me.textHeight = height;
-        if(!me.width) me.width = width;
-        if(!me.height) me.height = height;
+        if(!me.width) 
+            me.width = width;
+        if(!me.height) 
+            me.height = height;
 
         //vertical alignment
         var startY = 0;
         switch(me.textVAlign){
             case 'middle':
-                startY = me.height - me.textHeight >> 1;
+                startY = me.height?(me.height - me.textHeight) >> 1:0;
                 break;
             case 'bottom':
-                startY = me.height - me.textHeight;
+                startY = me.height?(me.height - me.textHeight):0;
                 break;
         }
 
         //draw background
         var bg = me.background;
-        if(bg){
+        if(bg && (context !== _cacheContext)){
             context.fillStyle = bg;
-            context.fillRect(0, 0, me.width, me.height);
+            context.fillRect(0, 0, me.width||me.textWidth, me.height||me.textHeight);
         }
 
         if(me.outline) context.strokeStyle = me.color;
@@ -242,18 +249,18 @@ var Text = Class.create(/** @lends Text.prototype */{
 
         switch(me.textAlign){
             case 'center':
-                x = width >> 1;
+                x = width?width >> 1:0;
                 break;
             case 'right':
             case 'end':
-                x = width;
+                x = width?width:0;
                 break;
         };
 
         if(me.outline) context.strokeText(text, x, y);
         else context.fillText(text, x, y);
     },
-
+    
     Statics: /** @lends Text */{
         /**
          * 测算指定字体样式的行高。
