@@ -98,7 +98,7 @@ function onLoad(){
         height: game.h,
         scaleX: game.scale,
         scaleY: game.scale,
-	background:'#000'
+	//background:'#000'
     });
     game.stage = stage;
 
@@ -110,6 +110,44 @@ function onLoad(){
     //enable dom events
     stage.enableDOMEvent([Hilo.event.POINTER_START, Hilo.event.POINTER_MOVE, Hilo.event.POINTER_END]);
 
+
+
+//init texture atlas
+            var atlas = new Hilo.TextureAtlas({
+                image: 'images/fish.png',
+                width: 174,
+                height: 1512,
+                frames: {
+                    frameWidth: 174,
+                    frameHeight: 126,
+                    numFrames: 12
+                },
+                sprites: {
+                    fish: {from:0, to:7}
+                }
+            });
+
+            
+    for(var i = 0;i<100;i++){
+            
+//create a fish sprite
+            var fish = new Hilo.Sprite({
+                frames: atlas.getSprite('fish'),
+                x: 10 * (i%50),
+                y: 100 * (i%8),
+                interval: 1,
+                timeBased: false,
+                loop: true,
+                onUpdate: function(){
+                    if(this.x > stage.width - this.pivotX){
+                        this.x = 0;
+                    }else{
+                        this.x += 3;
+                    }
+                }
+            }).addTo(stage);
+    }	
+        
     var root = new Hilo.Container({
 	        background: '#ffe',
 	        clipChildren: true,
@@ -131,9 +169,6 @@ function onLoad(){
                 y:0,
                 rotation:10
             }).addTo(root);
-
-	
-    
     //green button
     var greenBtn = new Hilo.Button({
         id: 'greenBtn',
@@ -258,7 +293,6 @@ function onLoad(){
                 x: -50,
                 y: 0
             }).addTo(container);
-
 
 
 }
