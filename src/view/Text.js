@@ -31,14 +31,10 @@ var _cacheContext = _cacheCanvas && _cacheCanvas.getContext('2d');
  * @requires hilo/view/View
  * @property {String} text 指定要显示的文本内容。
  * @property {String} color 指定使用的字体颜色。
- * @property {String} textAlign 指定文本的对齐方式。可以是以下任意一个值：'start', 'end', 'left', 'right', and 'center'。
- * @property {String} textVAlign 指定文本的垂直对齐方式。可以是以下任意一个值：'top', 'middle', 'bottom'。
+ * @property {String} textAlign 指定文本的对齐方式。可以是以下任意一个值：'left', 'center', 'right' 。
  * @property {Boolean} outline 指定文本是绘制边框还是填充。
  * @property {Number} lineSpacing 指定文本的行距。单位为像素。默认值为0。
- * @property {Number} maxWidth 指定文本的最大宽度。默认值为200。
  * @property {String} font 文本的字体CSS样式。只读属性。设置字体样式请用setFont方法。
- * @property {Number} textWidth 指示文本内容的宽度，只读属性。仅在canvas模式下有效。
- * @property {Number} textHeight 指示文本内容的高度，只读属性。仅在canvas模式下有效。
  */
 var Text = Class.create(/** @lends Text.prototype */{
     Extends: View,
@@ -47,22 +43,31 @@ var Text = Class.create(/** @lends Text.prototype */{
         this.id = this.id || properties.id || Hilo.getUid('Text');
         Text.superclass.constructor.call(this, properties);
 
-        // if(!properties.width) this.width = 200; //default width
         if(!properties.font) this.font = '16px arial'; //default font style
-        if(properties.width && this.maxWidth > properties.width) this.maxWidth = properties.width;
         this._fontHeight = Text.measureFontHeight(this.font);
+        
+        if(properties.width){
+            this.width = properties.width;
+            this._autoWidth = false;
+        }else{
+            this.width = 512;
+            this._autoWidth = true;
+        }
+        if(properties.height){
+            this.height = properties.height;
+            this._autoHeight = false;
+        }else{
+            this.height = 512;
+            this._autoHeight = true;
+        }
     },
 
     text: null,
     color: '#000',
     textAlign: null,
-    textVAlign: null,
     outline: false,
     lineSpacing: 0,
-    maxWidth: 500,
     font: null, //ready-only
-    textWidth: 0, //read-only
-    textHeight: 0, //read-only
     
     /**
      * 缓存到图片里。可用来提高渲染效率。
@@ -85,8 +90,8 @@ var Text = Class.create(/** @lends Text.prototype */{
         }
         
         if(dirty){
-            _cacheCanvas.width = this.width || this.maxWidth;
-            _cacheCanvas.height = this.height || 800;
+            _cacheCanvas.width = this.width;
+            _cacheCanvas.height = this.height;
             _cacheContext.clearRect(0, 0, _cacheCanvas.width, _cacheCanvas.height);
             this._draw(_cacheContext);
             this._cacheImage = new Image();
@@ -130,8 +135,8 @@ var Text = Class.create(/** @lends Text.prototype */{
             style.font = me.font;
             style.textAlign = me.textAlign;
             style.color = me.color;
-            style.width = (me.width || me.maxWidth) + 'px';
-            style.height = me.height? me.height + 'px':null;
+            style.width = me._autoWidth?null:me.width + 'px';
+            style.height = me._autoHeight?null:me.height + 'px';
             style.lineHeight = (me._fontHeight + me.lineSpacing) + 'px';
             style['word-break'] = 'break-all';
             style['word-wrap'] = 'break-word';
@@ -171,7 +176,7 @@ var Text = Class.create(/** @lends Text.prototype */{
             w = context.measureText(line).width;
 
             //check if the line need to split
-            if(w <= me.maxWidth){
+            if(w <= me.width || me._autoWidth){
                 drawLines.push({text:line, y:height});
                 // me._drawTextLine(context, line, height);
                 if(width < w) width = w;
@@ -185,7 +190,7 @@ var Text = Class.create(/** @lends Text.prototype */{
                 word = line[j];
                 newWidth = context.measureText(str + word).width;
 
-                if(newWidth > me.maxWidth){
+                if(newWidth > me.width){
                     drawLines.push({text:str, y:height});
                     // me._drawTextLine(context, str, height);
                     if(width < oldWidth) width = oldWidth;
@@ -205,29 +210,17 @@ var Text = Class.create(/** @lends Text.prototype */{
             }
         }
 
-        me.textWidth = width;
-        me.textHeight = height;
-        if(!me.width) 
+        if(me._autoWidth) 
             me.width = width;
-        if(!me.height) 
+        if(me._autoHeight) 
             me.height = height;
 
-        //vertical alignment
-        var startY = 0;
-        switch(me.textVAlign){
-            case 'middle':
-                startY = me.height?(me.height - me.textHeight) >> 1:0;
-                break;
-            case 'bottom':
-                startY = me.height?(me.height - me.textHeight):0;
-                break;
-        }
 
         //draw background
         var bg = me.background;
         if(bg && (context !== _cacheContext)){
             context.fillStyle = bg;
-            context.fillRect(0, 0, me.width||me.textWidth, me.height||me.textHeight);
+            context.fillRect(0, 0, me.width, me.height);
         }
 
         if(me.outline) context.strokeStyle = me.color;
@@ -236,7 +229,7 @@ var Text = Class.create(/** @lends Text.prototype */{
         //draw text lines
         for(var i = 0; i < drawLines.length; i++){
             var line = drawLines[i];
-            me._drawTextLine(context, line.text, startY + line.y);
+            me._drawTextLine(context, line.text, line.y);
         }
     },
 
@@ -249,11 +242,10 @@ var Text = Class.create(/** @lends Text.prototype */{
 
         switch(me.textAlign){
             case 'center':
-                x = width?width >> 1:0;
+                x = width >> 1;
                 break;
             case 'right':
-            case 'end':
-                x = width?width:0;
+                x = width;
                 break;
         };
 
