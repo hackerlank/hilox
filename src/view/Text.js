@@ -94,11 +94,12 @@ var Text = Class.create(/** @lends Text.prototype */{
             _cacheCanvas.height = this.height;
             _cacheContext.clearRect(0, 0, _cacheCanvas.width, _cacheCanvas.height);
             this._draw(_cacheContext);
-            this._cacheImage = new Image();
-            this._cacheImage.src = _cacheCanvas.toDataURL();
+            
+            var cacheImage = new Image();
+            cacheImage.src = _cacheCanvas.toDataURL();
+            
             this.drawable = this.drawable||new Drawable();
-            this.drawable.init(this._cacheImage);
-            console.log(JSON.stringify(this.drawable),this.width, this.height)
+            this.drawable.init(cacheImage);
         }
     },
 

@@ -45,7 +45,7 @@ function onResize(){
 	var gameX = 0;
 	var gameY = 0;
 	var gameScale = 1.0;
-	var gameWidth = 540;
+	var gameWidth = 530;
 	var gameHeight = 800;
 
 
@@ -103,7 +103,7 @@ function onLoad(){
     game.stage = stage;
 
     //start stage ticker
-    var ticker = new Hilo.Ticker(20);
+    var ticker = new Hilo.Ticker(60);
     ticker.addTick(stage);
     ticker.start();
 
@@ -314,4 +314,16 @@ function onLoad(){
                 alpha:0.5,
                 textAlign:'center',
             }).addTo(stage);
+
+	    var fps = new Hilo.Text({
+                text: "FPS:",
+                x: 40,
+                y: 40,
+            }).addTo(stage);
+
+            fps.onUpdate = function(){
+                fps.text = "FPS:"+ticker.getMeasuredFPS();
+	    }
+
+
 }

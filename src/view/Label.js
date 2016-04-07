@@ -15,10 +15,10 @@ var Bitmap = Hilo.Bitmap;
  */
 
 /**
- * @class BitmapText类提供使用位图文本的功能。当前仅支持单行文本。
+ * @class Label。当前仅支持单行文本。
  * @augments Container
  * @param {Object} properties 创建对象的属性参数。可包含此类所有可写属性。
- * @module hilo/view/BitmapText
+ * @module hilo/view/Label
  * @requires hilo/core/Class
  * @requires hilo/core/Hilo
  * @requires hilo/view/Container
@@ -28,12 +28,12 @@ var Bitmap = Hilo.Bitmap;
  * @property {String} text 位图文本的文本内容。只读属性。设置文本请使用setFont方法。
  * @property {String} textAlign 文本对齐方式，值为left、center、right, 默认left。只读属性。设置文本请使用setTextAlign方法。
  */
-var BitmapText = Class.create(/** @lends BitmapText.prototype */{
+var Label = Class.create(/** @lends Label.prototype */{
     Extends: Container,
     constructor: function(properties){
         properties = properties || {};
-        this.id = this.id || properties.id || Hilo.getUid('BitmapText');
-        BitmapText.superclass.constructor.call(this, properties);
+        this.id = this.id || properties.id || Hilo.getUid('Label');
+        Label.superclass.constructor.call(this, properties);
 
         var text = properties.text + '';
         if(text){
@@ -52,7 +52,7 @@ var BitmapText = Class.create(/** @lends BitmapText.prototype */{
     /**
      * 设置位图文本的文本内容。
      * @param {String} text 要设置的文本内容。
-     * @returns {BitmapText} BitmapText对象本身。链式调用支持。
+     * @returns {Label} Label对象本身。链式调用支持。
      */
     setText: function(text){
         var me = this, str = text.toString(), len = str.length;
@@ -91,8 +91,8 @@ var BitmapText = Class.create(/** @lends BitmapText.prototype */{
     },
     _createBitmap:function(cfg){
         var bmp;
-        if(BitmapText._pool.length){
-            bmp = BitmapText._pool.pop();
+        if(Label._pool.length){
+            bmp = Label._pool.pop();
             bmp.setImage(cfg.image, cfg.rect);
         }
         else{
@@ -104,13 +104,13 @@ var BitmapText = Class.create(/** @lends BitmapText.prototype */{
         return bmp;
     },
     _releaseBitmap:function(bmp){
-        BitmapText._pool.push(bmp);
+        Label._pool.push(bmp);
     },
 
      /**
      * 设置位图文本的对齐方式。
      * @param textAlign 文本对齐方式，值为left、center、right
-     * @returns {BitmapText} BitmapText对象本身。链式调用支持。
+     * @returns {Label} Label对象本身。链式调用支持。
      */
     setTextAlign:function(textAlign){
         this.textAlign = textAlign||this.textAlign;
@@ -145,7 +145,7 @@ var BitmapText = Class.create(/** @lends BitmapText.prototype */{
         return true;
     },
 
-    Statics:/** @lends BitmapText */{
+    Statics:/** @lends Label */{
         _pool:[],
         /**
          * 简易方式生成字形集合。
@@ -154,7 +154,7 @@ var BitmapText = Class.create(/** @lends BitmapText.prototype */{
          * @param {Image} image 字符图片。
          * @param {Number} col 列数  默认和文本字数一样
          * @param {Number} row 行数 默认1行
-         * @returns {BitmapText} BitmapText对象本身。链式调用支持。
+         * @returns {Label} Label对象本身。链式调用支持。
          */
         createGlyphs:function(text, image, col, row){
             var str = text.toString();
@@ -175,5 +175,5 @@ var BitmapText = Class.create(/** @lends BitmapText.prototype */{
     }
 
 });
-Hilo.BitmapText = BitmapText;
+Hilo.Label = Label;
 })(window);

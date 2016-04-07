@@ -28,7 +28,7 @@ java -jar compiler.jar \
     --js=../src/view/Sprite.js \
     --js=../src/view/Button.js \
     --js=../src/view/Text.js \
-    --js=../src/view/BitmapText.js \
+    --js=../src/view/Label.js \
     --js=../src/view/DOMElement.js \
     --js=../src/view/TextureAtlas.js \
 
