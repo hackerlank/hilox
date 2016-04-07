@@ -46,7 +46,7 @@ var Container = Class.create(/** @lends Container.prototype */{
      * 返回容器的子元素的数量。
      * @returns {Uint} 容器的子元素的数量。
      */
-    getNumChildren: function(){
+    getChildrenNum: function(){
         return this.children.length;
     },
 

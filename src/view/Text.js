@@ -21,7 +21,7 @@ var _cacheContext = _cacheCanvas && _cacheCanvas.getContext('2d');
  */
 
 /**
- * @class Text类提供简单的文字显示功能。复杂的文本功能可以使用DOMElement。
+ * @class Text类提供简单的文字显示功能。复杂的文本功能可以使用Element。
  * @augments View
  * @param {Object} properties 创建对象的属性参数。可包含此类所有可写属性。
  * @module hilo/view/Text
@@ -43,23 +43,22 @@ var Text = Class.create(/** @lends Text.prototype */{
         this.id = this.id || properties.id || Hilo.getUid('Text');
         Text.superclass.constructor.call(this, properties);
 
-        if(!properties.font) this.font = '16px arial'; //default font style
-        this._fontHeight = Text.measureFontHeight(this.font);
-        
         if(properties.width){
             this.width = properties.width;
             this._autoWidth = false;
         }else{
-            this.width = 512;
+            this.width = 256;
             this._autoWidth = true;
         }
         if(properties.height){
             this.height = properties.height;
             this._autoHeight = false;
         }else{
-            this.height = 512;
+            this.height = 256;
             this._autoHeight = true;
         }
+        
+        this.setFont(properties.font || '16px arial');
     },
 
     text: null,
@@ -69,41 +68,7 @@ var Text = Class.create(/** @lends Text.prototype */{
     lineSpacing: 0,
     font: null, //ready-only
     
-    /**
-     * 缓存到图片里。可用来提高渲染效率。
-     * @param {Boolean} forceUpdate 是否强制更新缓存
-     */
-    cache: function(){
-        var dirty = true;
-        
-        if(this._text !== this.text){
-            this._text = this.text;
-            dirty = true;
-        }
-        if(this._color !== this.color){
-            this._color = this.color;
-            dirty = true;
-        }
-        if(this._font !== this.font){
-            this._font = this.font;
-            dirty = true;
-        }
-        
-        if(dirty){
-            _cacheCanvas.width = this.width;
-            _cacheCanvas.height = this.height;
-            _cacheContext.clearRect(0, 0, _cacheCanvas.width, _cacheCanvas.height);
-            this._draw(_cacheContext);
-            
-            var cacheImage = new Image();
-            cacheImage.src = _cacheCanvas.toDataURL();
-            
-            this.drawable = this.drawable||new Drawable();
-            this.drawable.init(cacheImage);
-        }
-    },
-
-
+    
     /**
      * 设置文本的字体CSS样式。
      * @param {String} font 要设置的字体CSS样式。
@@ -124,7 +89,7 @@ var Text = Class.create(/** @lends Text.prototype */{
      */
     render: function(renderer, delta){
         var me = this, canvas = renderer.canvas;
-
+        
         if(renderer.renderType === 'canvas'){
             me._draw(renderer.context);
         }
@@ -132,22 +97,34 @@ var Text = Class.create(/** @lends Text.prototype */{
             var drawable = me.drawable;
             var domElement = drawable.domElement;
             var style = domElement.style;
-
-            style.font = me.font;
-            style.textAlign = me.textAlign;
-            style.color = me.color;
-            style.width = me._autoWidth?null:me.width + 'px';
-            style.height = me._autoHeight?null:me.height + 'px';
-            style.lineHeight = (me._fontHeight + me.lineSpacing) + 'px';
-            style['word-break'] = 'break-all';
-            style['word-wrap'] = 'break-word';
-            if(me._text !== me.text){
+            if(me._check()){
+                style.font = me.font;
+                style.textAlign = me.textAlign;
+                style.color = me.color;
+                style.lineHeight = (me._fontHeight + me.lineSpacing) + 'px';
+                style['word-break'] = 'break-all';
+                style['word-wrap'] = 'break-word';
+                
                 domElement.innerHTML = me.text.replace("\n","</br>");
             }
             renderer.draw(this);
+            if(me._autoWidth){
+                me.width = domElement.offsetWidth;
+                style.width = null;
+            }else{
+                style.width = me.width + 'px';
+            }
+            if(me._autoHeight){
+                me.height = domElement.offsetHeight;
+                style.height = null;
+            }else{
+                style.height = me.height + 'px';
+            }
         }
         else{
-            me.cache();
+            if(me._check()){
+                me._cache();
+            }
             renderer.draw(me);
         }
     },
@@ -254,6 +231,43 @@ var Text = Class.create(/** @lends Text.prototype */{
         else context.fillText(text, x, y);
     },
     
+    _check: function(){
+        var dirty = true;
+        
+        if(this._text !== this.text){
+            this._text = this.text;
+            dirty = true;
+        }
+        if(this._color !== this.color){
+            this._color = this.color;
+            dirty = true;
+        }
+        if(this._font !== this.font){
+            this._font = this.font;
+            dirty = true;
+        }
+        return dirty;
+    },
+    
+    /**
+     * 缓存到图片里。可用来提高渲染效率。
+     * @param {Boolean} forceUpdate 是否强制更新缓存
+     */
+    _cache: function(){
+        _cacheCanvas.width = this.width;
+        _cacheCanvas.height = this.height;
+        _cacheContext.clearRect(0, 0, _cacheCanvas.width, _cacheCanvas.height);
+        this._draw(_cacheContext);
+
+        var cacheImage = new Image();
+        cacheImage.src = _cacheCanvas.toDataURL();
+
+        this.drawable = this.drawable||new Drawable();
+        this.drawable.init(cacheImage);
+    },
+
+
+    
     Statics: /** @lends Text */{
         /**
          * 测算指定字体样式的行高。
@@ -261,11 +275,10 @@ var Text = Class.create(/** @lends Text.prototype */{
          * @return {Number} 返回指定字体的行高。
          */
         measureFontHeight: function(font){
-            var docElement = document.documentElement, fontHeight;
-            var elem = Hilo.createElement('div', {style:{font:font, position:'absolute'}, innerHTML:'M'});
-
+            var elem = Hilo.createElement('div', {style:{font:font, position:'absolute'}, innerHTML:'PM国家'});
+            var docElement = document.documentElement;
             docElement.appendChild(elem);
-            fontHeight = elem.offsetHeight;
+            var fontHeight = elem.offsetHeight;
             docElement.removeChild(elem);
             return fontHeight;
         }

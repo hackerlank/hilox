@@ -15,25 +15,25 @@ var Drawable = Hilo.Drawable;
  */
 
 /**
- * @name DOMElement
- * @class DOMElement是dom元素的包装。
+ * @name Element
+ * @class Element是dom元素的包装。
  * @augments View
  * @param {Object} properties 创建对象的属性参数。可包含此类所有可写属性。特殊属性有：
  * <ul>
  * <li><b>element</b> - 要包装的dom元素。必需。</li>
  * </ul>
- * @module hilo/view/DOMElement
+ * @module hilo/view/Element
  * @requires hilo/core/Hilo
  * @requires hilo/core/Class
  * @requires hilo/core/Drawable
  * @requires hilo/view/View
  */
-var DOMElement = Class.create(/** @lends DOMElement.prototype */{
+var Element = Class.create(/** @lends Element.prototype */{
     Extends: View,
     constructor: function(properties){
         properties = properties || {};
-        this.id = this.id || properties.id || Hilo.getUid("DOMElement");
-        DOMElement.superclass.constructor.call(this, properties);
+        this.id = this.id || properties.id || Hilo.getUid("Element");
+        Element.superclass.constructor.call(this, properties);
 
         this.drawable = new Drawable();
         var elem = this.drawable.domElement = (properties.element || Hilo.createElement('div', {style: {position: 'absolute'}}));
@@ -65,5 +65,5 @@ var DOMElement = Class.create(/** @lends DOMElement.prototype */{
         }
     }
 });
-Hilo.DOMElement = DOMElement;
+Hilo.Element = Element;
 })(window);

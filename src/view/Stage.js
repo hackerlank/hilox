@@ -190,6 +190,18 @@ var Stage = Class.create(/** @lends Stage.prototype */{
         }
     },
     
+        /**
+     * 更新舞台在页面中的可视区域，即渲染区域。当舞台canvas的样式border、margin、padding等属性更改后，需要调用此方法更新舞台渲染区域。
+     * @returns {Object} 舞台的可视区域。即viewport属性。
+     */
+    updateViewport: function(){
+        var canvas = this.canvas, viewport = null;
+        if(canvas.parentNode){
+            viewport = this.viewport = Hilo.getElementRect(canvas);
+        }
+        return viewport;
+    },
+    
     /**
      * 开启/关闭舞台的DOM事件响应。要让舞台上的可视对象响应用户交互，必须先使用此方法开启舞台的相应事件的响应。
      * @param {String|Array} type 要开启/关闭的事件名称或数组。
@@ -280,19 +292,6 @@ var Stage = Class.create(/** @lends Stage.prototype */{
             e.preventDefault();
         }
     },
-
-    /**
-     * 更新舞台在页面中的可视区域，即渲染区域。当舞台canvas的样式border、margin、padding等属性更改后，需要调用此方法更新舞台渲染区域。
-     * @returns {Object} 舞台的可视区域。即viewport属性。
-     */
-    updateViewport: function(){
-        var canvas = this.canvas, viewport = null;
-        if(canvas.parentNode){
-            viewport = this.viewport = Hilo.getElementRect(canvas);
-        }
-        return viewport;
-    },
-
 
     
      /**

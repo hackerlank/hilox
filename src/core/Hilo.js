@@ -240,16 +240,7 @@ return {
             style.overflow = obj.clipChildren?'hidden':null;
         }
         if(flag = this.cacheStateIfChanged(obj, ['pivotX', 'pivotY'], stateCache)){
-            var tpx = obj.pivotX, tpy = obj.pivotY;
-            var rect = drawable.rect;
-            if(rect){
-                var sw = rect[2], sh = rect[3], offsetX = rect[4], offsetY = rect[5];
-                if(offsetX || offsetY){
-                    tpx = tpx - (offsetX - sw * 0.5);
-                    tpy = tpy - (offsetY - sh * 0.5);
-                }
-            }
-            style[prefix + 'TransformOrigin'] = tpx + px + ' ' + tpy + px;
+            style[prefix + 'TransformOrigin'] = obj.pivotX + px + ' ' + obj.pivotY + px;
         }
         if(this.cacheStateIfChanged(obj, ['x', 'y', 'rotation', 'scaleX', 'scaleY'], stateCache) || flag){
             style[prefix + 'Transform'] = 'translate(' + (obj.x - obj.pivotX) + 'px, ' + (obj.y - obj.pivotY) + 'px)' +
@@ -313,6 +304,5 @@ return {
 };
 
 })();
-Hilo.undefined = undefined;
 window.Hilo = Hilo;
 })(window);

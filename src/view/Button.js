@@ -147,25 +147,9 @@ var Drawable = Hilo.Drawable;
     },
 
     Statics: /** @lends Button */ {
-        /**
-         * 按钮弹起状态的常量值，即：'up'。
-         * @type String
-         */
         UP: 'up',
-        /**
-         * 按钮经过状态的常量值，即：'over'。
-         * @type String
-         */
         OVER: 'over',
-        /**
-         * 按钮按下状态的常量值，即：'down'。
-         * @type String
-         */
         DOWN: 'down',
-        /**
-         * 按钮不可用状态的常量值，即：'disabled'。
-         * @type String
-         */
         DISABLED: 'disabled'
     }
  });

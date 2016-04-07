@@ -128,8 +128,8 @@ return Class.create(/** @lends View.prototype */{
         if(!(this.width && this.height)){
             var rect = this.drawable && this.drawable.rect;
             if(rect){
-                target.width = (target.width || rect[2]);
-                target.height = (target.height || rect[3]);
+                this.width = rect[2];
+                this.height = rect[3];
             }
         }
     },

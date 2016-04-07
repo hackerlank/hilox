@@ -24,7 +24,7 @@ var Bitmap = Hilo.Bitmap;
  * @requires hilo/view/Container
  * @requires hilo/view/Bitmap
  * @property {Object} glyphs 位图字体的字形集合。格式为：{letter:{image:img, rect:[0,0,100,100]}}。
- * @property {Number} letterSpacing 字距，即字符间的间隔。默认值为0。
+ * @property {Number} spacing 字距，即字符间的间隔。默认值为0。
  * @property {String} text 位图文本的文本内容。只读属性。设置文本请使用setFont方法。
  * @property {String} textAlign 文本对齐方式，值为left、center、right, 默认left。只读属性。设置文本请使用setTextAlign方法。
  */
@@ -35,6 +35,10 @@ var Label = Class.create(/** @lends Label.prototype */{
         this.id = this.id || properties.id || Hilo.getUid('Label');
         Label.superclass.constructor.call(this, properties);
 
+        if(properties.font){
+            this.setFont(properties.font);
+        }
+        
         var text = properties.text + '';
         if(text){
             this.text = '';
@@ -45,9 +49,32 @@ var Label = Class.create(/** @lends Label.prototype */{
     },
 
     glyphs: null,
-    letterSpacing: 0,
+    spacing: 0,
     text: '',
     textAlign:'left',
+    
+    setFont:function(text, image, col, row){
+        var str = text.toString();
+        col = col||str.length;
+        row = row||1;
+        var w = image.width/col;
+        var h = image.height/row;
+        var glyphs = {};
+        for(var i = 0, l = text.length;i < l;i ++){
+            charStr = str.charAt(i);
+            glyphs[charStr] = {
+                image:image,
+                rect:[w * (i % col), h * Math.floor(i / col), w, h]
+            }
+        }
+        this.glyphs = glyphs;
+        
+        if(this.text != ''){
+            var str = this.text;
+            this.text = '';
+            this.setText(str);
+        }
+    },
 
     /**
      * 设置位图文本的文本内容。
@@ -64,13 +91,13 @@ var Label = Class.create(/** @lends Label.prototype */{
             charStr = str.charAt(i);
             charGlyph = me.glyphs[charStr];
             if(charGlyph){
-                left = width + (width > 0 ? me.letterSpacing : 0);
+                left = width + (width > 0 ? me.spacing : 0);
                 if(me.children[i]){
                     charObj = me.children[i];
                     charObj.setImage(charGlyph.image, charGlyph.rect);
                 }
                 else{
-                    charObj = me._createBitmap(charGlyph);
+                    charObj = Label._createBitmap(charGlyph);
                     me.addChild(charObj);
                 }
                 charObj.x = left;
@@ -80,8 +107,8 @@ var Label = Class.create(/** @lends Label.prototype */{
         }
 
         for(i = me.children.length - 1;i >= len;i --){
-            me._releaseBitmap(me.children[i]);
             me.children[i].removeFromParent();
+            Label._releaseBitmap(me.children[i]);
         }
 
         me.width = width;
@@ -89,23 +116,7 @@ var Label = Class.create(/** @lends Label.prototype */{
         this.setTextAlign();
         return me;
     },
-    _createBitmap:function(cfg){
-        var bmp;
-        if(Label._pool.length){
-            bmp = Label._pool.pop();
-            bmp.setImage(cfg.image, cfg.rect);
-        }
-        else{
-            bmp = new Bitmap({
-                image:cfg.image,
-                rect:cfg.rect
-            });
-        }
-        return bmp;
-    },
-    _releaseBitmap:function(bmp){
-        Label._pool.push(bmp);
-    },
+    
 
      /**
      * 设置位图文本的对齐方式。
@@ -129,48 +140,25 @@ var Label = Class.create(/** @lends Label.prototype */{
         return this;
     },
 
-    /**
-     * 返回能否使用当前指定的字体显示提供的字符串。
-     * @param {String} str 要检测的字符串。
-     * @returns {Boolean} 是否能使用指定字体。
-     */
-    hasGlyphs: function(str){
-        var glyphs = this.glyphs;
-        if(!glyphs) return false;
-
-        var str = str.toString(), len = str.length, i;
-        for(i = 0; i < len; i++){
-            if(!glyphs[str.charAt(i)]) return false;
-        }
-        return true;
-    },
-
+   
     Statics:/** @lends Label */{
         _pool:[],
-        /**
-         * 简易方式生成字形集合。
-         * @static
-         * @param {String} text 字符文本。
-         * @param {Image} image 字符图片。
-         * @param {Number} col 列数  默认和文本字数一样
-         * @param {Number} row 行数 默认1行
-         * @returns {Label} Label对象本身。链式调用支持。
-         */
-        createGlyphs:function(text, image, col, row){
-            var str = text.toString();
-            col = col||str.length;
-            row = row||1;
-            var w = image.width/col;
-            var h = image.height/row;
-            var glyphs = {};
-            for(var i = 0, l = text.length;i < l;i ++){
-                charStr = str.charAt(i);
-                glyphs[charStr] = {
-                    image:image,
-                    rect:[w * (i % col), h * Math.floor(i / col), w, h]
-                }
+        _createBitmap:function(cfg){
+            var bmp;
+            if(Label._pool.length){
+                bmp = Label._pool.pop();
+                bmp.setImage(cfg.image, cfg.rect);
             }
-            return glyphs;
+            else{
+                bmp = new Bitmap({
+                    image:cfg.image,
+                    rect:cfg.rect
+                });
+            }
+            return bmp;
+        },
+        _releaseBitmap:function(bmp){
+            Label._pool.push(bmp);
         }
     }
 

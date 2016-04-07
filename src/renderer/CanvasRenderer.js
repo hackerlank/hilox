@@ -69,9 +69,7 @@ var CanvasRenderer = Class.create(/** @lends CanvasRenderer.prototype */{
         //draw image
         var drawable = target.drawable, image = drawable && drawable.image;
         if(image){
-            var rect = drawable.rect, offsetX = rect[4], offsetY = rect[5];
-            //the pivot is the center of frame if has offset, otherwise is (0, 0)
-            if(offsetX || offsetY) ctx.translate(offsetX - sw * 0.5, offsetY - sh * 0.5);
+            var rect = drawable.rect;
             ctx.drawImage(image, rect[0], rect[1], rect[2], rect[3], 0, 0, w, h);
         }
     },

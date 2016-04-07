@@ -254,7 +254,6 @@ var WebGLRenderer = Class.create(/** @lends WebGLRenderer.prototype */{
         
         gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STREAM_DRAW);
         gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0);
-        //console.log(positions[0]);
     },
     _renderImage:function(target, image, rect){
         if(!image.texture){
@@ -262,13 +261,7 @@ var WebGLRenderer = Class.create(/** @lends WebGLRenderer.prototype */{
         }
         
         var gl = this.gl, w = target.width, h = target.height, px = -target.pivotX, py = -target.pivotY;
-        var sw = rect[2], sh = rect[3], offsetX = rect[4], offsetY = rect[5];
-        if(offsetX || offsetY){
-            px = px + offsetX - sw * 0.5;
-            py = py + offsetY - sh * 0.5;
-        }
-
-        var vertexs = this._createVertexs(image, rect[0], rect[1], sw, sh, px, py, w, h);
+        var vertexs = this._createVertexs(image, rect[0], rect[1], rect[2], rect[3], px, py, w, h);
         var index = this.batchIndex * this.positionStride;
         var positions = this.vertex;
         var alpha = target.__webglRenderAlpha;
