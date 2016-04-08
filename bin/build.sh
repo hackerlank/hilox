@@ -1,41 +1,45 @@
 #! /bin/bash
 
+OUT_FILE=../out/hilo.js
+MIN_FILE=../out/hilo.min.js
 
-java -jar compiler.jar \
-    --dependency_mode=NONE \
-    --js_output_file=../out/hilo.js \
-    --js=../src/core/polyfill.js \
-    --js=../src/core/Hilo.js \
-    --js=../src/core/Class.js \
-    --js=../src/core/Event.js \
-    --js=../src/core/Matrix.js \
-    --js=../src/core/Ticker.js \
-    --js=../src/core/Drawable.js \
-    --js=../src/loader/ScriptLoader.js \
-    --js=../src/loader/ImageLoader.js \
-    --js=../src/loader/LoadQueue.js \
-    --js=../src/audio/HTMLAudio.js \
-    --js=../src/audio/WebAudio.js \
-    --js=../src/audio/WebSound.js \
-    --js=../src/renderer/Renderer.js \
-    --js=../src/renderer/DOMRenderer.js \
-    --js=../src/renderer/WebGLRenderer.js \
-    --js=../src/renderer/CanvasRenderer.js \
-    --js=../src/view/View.js \
-    --js=../src/view/Container.js \
-    --js=../src/view/Stage.js \
-    --js=../src/view/Bitmap.js \
-    --js=../src/view/Sprite.js \
-    --js=../src/view/Button.js \
-    --js=../src/view/Text.js \
-    --js=../src/view/Label.js \
-    --js=../src/view/Element.js \
-
-
-
-java -jar yuicompressor-2.4.8.jar ../out/hilo.js -o ../out/hilo.min.js
+echo "gen hilo.js..."
+echo "//hilo game engine - guanghe fixed - http://hiloteam.github.io/" > $OUT_FILE
+cat  ../src/core/polyfill.js >> $OUT_FILE 
+cat  ../src/core/Hilo.js >> $OUT_FILE 
+cat  ../src/core/Class.js >> $OUT_FILE            
+cat  ../src/core/Event.js >> $OUT_FILE
+cat  ../src/core/Matrix.js >> $OUT_FILE
+cat  ../src/core/Ticker.js >> $OUT_FILE
+cat  ../src/core/Drawable.js >> $OUT_FILE
+cat  ../src/loader/ScriptLoader.js >> $OUT_FILE
+cat  ../src/loader/ImageLoader.js >> $OUT_FILE
+cat  ../src/loader/LoadQueue.js >> $OUT_FILE
+cat  ../src/audio/HTMLAudio.js >> $OUT_FILE
+cat  ../src/audio/WebAudio.js >> $OUT_FILE
+cat  ../src/audio/WebSound.js >> $OUT_FILE
+cat  ../src/renderer/Renderer.js >> $OUT_FILE
+cat  ../src/renderer/DOMRenderer.js >> $OUT_FILE
+cat  ../src/renderer/WebGLRenderer.js >> $OUT_FILE
+cat  ../src/renderer/CanvasRenderer.js >> $OUT_FILE
+cat  ../src/view/View.js >> $OUT_FILE
+cat  ../src/view/Container.js >> $OUT_FILE
+cat  ../src/view/Stage.js >> $OUT_FILE
+cat  ../src/view/Bitmap.js >> $OUT_FILE
+cat  ../src/view/Sprite.js >> $OUT_FILE
+cat  ../src/view/Button.js >> $OUT_FILE
+cat  ../src/view/Text.js >> $OUT_FILE
+cat  ../src/view/Label.js >> $OUT_FILE
+cat  ../src/view/Element.js >> $OUT_FILE
+echo "//hilo game engine " >> $OUT_FILE
 
 
+echo "gen hilo.min.js..."
+java -jar compiler.jar --dependency_mode=NONE --js_output_file=$MIN_FILE --js=$OUT_FILE
+java -jar yuicompressor-2.4.8.jar $MIN_FILE -o $MIN_FILE
+
+
+echo "gen completed"
 
 
 

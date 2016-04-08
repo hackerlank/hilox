@@ -161,7 +161,6 @@ var Label = Class.create(/** @lends Label.prototype */{
                     image:cfg.image,
                     rect:cfg.rect
                 });
-                console.log(cfg.image, cfg.rect);
             }
             return bmp;
         },
