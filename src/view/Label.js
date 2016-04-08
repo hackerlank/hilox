@@ -53,14 +53,20 @@ var Label = Class.create(/** @lends Label.prototype */{
     text: '',
     textAlign:'left',
     
-    setFont:function(text, image, col, row){
-        var str = text.toString();
-        col = col||str.length;
-        row = row||1;
-        var w = image.width/col;
-        var h = image.height/row;
+     /**
+      * 设置图片字体
+      * font: {text, width, height, image, rect}
+      */
+    setFont:function(font){
+        var str = font.text.toString(),
+            image = font.image,
+            rect = font.rect || [0,0,image.width,image.height],
+            w = font.width || rect[2],
+            h = font.height || rect[3],
+            col = font.col || Math.floor(rect[2]/w);
+
         var glyphs = {};
-        for(var i = 0, l = text.length;i < l;i ++){
+        for(var i = 0, l = str.length; i < l; i++){
             charStr = str.charAt(i);
             glyphs[charStr] = {
                 image:image,
@@ -68,7 +74,7 @@ var Label = Class.create(/** @lends Label.prototype */{
             }
         }
         this.glyphs = glyphs;
-        
+        console.log(JSON.stringify(this.glyphs));
         if(this.text != ''){
             var str = this.text;
             this.text = '';
@@ -107,8 +113,8 @@ var Label = Class.create(/** @lends Label.prototype */{
         }
 
         for(i = me.children.length - 1;i >= len;i --){
-            me.children[i].removeFromParent();
             Label._releaseBitmap(me.children[i]);
+            me.removeChild(me.children[i]);
         }
 
         me.width = width;
@@ -145,7 +151,8 @@ var Label = Class.create(/** @lends Label.prototype */{
         _pool:[],
         _createBitmap:function(cfg){
             var bmp;
-            if(Label._pool.length){
+            if(Label._pool.length > 0){
+                
                 bmp = Label._pool.pop();
                 bmp.setImage(cfg.image, cfg.rect);
             }
@@ -154,6 +161,7 @@ var Label = Class.create(/** @lends Label.prototype */{
                     image:cfg.image,
                     rect:cfg.rect
                 });
+                console.log(cfg.image, cfg.rect);
             }
             return bmp;
         },

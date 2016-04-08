@@ -28,7 +28,7 @@ var Drawable = Hilo.Drawable;
  * </ul>
  * @property {boolean} paused 判断精灵是否暂停。默认为false。
  * @property {boolean} loop 判断精灵是否可以循环播放。默认为true。
- * @property {number} interval 精灵动画的帧间隔，单位为毫秒。
+ * @property {number}  duration 精灵动画的帧间隔，单位为毫秒。
  */
 var Sprite = Class.create(/** @lends Sprite.prototype */{
     Extends: View,
@@ -41,7 +41,8 @@ var Sprite = Class.create(/** @lends Sprite.prototype */{
         this._frameNames = {};
         this._frameCallbacks = [];
         this.drawable = new Drawable();
-        if(properties.frames) this.addFrame(properties.frames);
+        
+        if(properties.frames) this.setFrames(properties.frames);
     },
 
     _frames: null, //所有帧的集合
@@ -56,20 +57,42 @@ var Sprite = Class.create(/** @lends Sprite.prototype */{
 
 
     /**
-     * 设置精灵动画序列指定索引位置的帧。
-     * @param {Object} frame 要设置的精灵动画帧数据。
-     * @param {Int} index 要设置的索引位置。
+     * 设置精灵动画序列
+     * @param {frames} frames 要设置的精灵动画帧数据。
+     *        Array [frame, frame,...]
+     *        Object {width, height, total, image, rect}
      * @returns {Sprite} Sprite对象本身。
      */
     setFrames: function(frames){
-        this._frames = frames;
-        this._frameNames = {}
-        for(var i = 0, len = frame.length; i < len; i++){
-            var frame = frames[i];
-            if(frame.name) this._frameNames[frame.name] = frame;
+        if(frames instanceof Array){ //frames by array
+            this._frames = frames;
+            this._frameNames = {}
+            for(var i = 0, len = frames.length; i < len; i++){
+                var frame = frames[i];
+                if(frame.name) this._frameNames[frame.name] = frame;
+            }
+        }else{
+            var image = frames.image, 
+                rect  = frames.rect || [0,0,image.width,image.height], 
+                x = rect[0], 
+                y = rect[1],
+                fw = frames.width || rect[2], 
+                fh = frames.height || rect[3];
+                
+            var xn = Math.floor(rect[2]/fw);
+            var fn = frames.total ||(xn * Math.floor(rect[3]/fh));
+            
+            var ff = [];
+            for(var i = 0; i< fn; i++){
+                var px = x + fw * (i % xn);
+                var py = y + fh * Math.floor(i/xn);
+                ff[i]={image:image,rect:[px, py, fw, fh]};
+            }
+            this.setFrames(ff);
         }
         return this;
     },
+    
 
     /**
      * 获取精灵动画序列中指定的帧。
@@ -172,7 +195,6 @@ var Sprite = Class.create(/** @lends Sprite.prototype */{
         var frameIndex = this._nextFrame(delta);
         if(frameIndex != this._frameIndex){
             this._frameIndex = frameIndex;
-            
             var callback =  this._frameCallbacks[frameIndex];
             if(callback) callback.call(this);
 

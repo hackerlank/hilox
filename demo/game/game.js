@@ -112,31 +112,16 @@ function onLoad(){
 
 
 
-//init texture atlas
-            var atlas = new Hilo.TextureAtlas({
-                image: 'images/fish.png',
-                width: 174,
-                height: 1512,
-                frames: {
-                    frameWidth: 174,
-                    frameHeight: 126,
-                    numFrames: 12
-                },
-                sprites: {
-                    fish: {from:0, to:7}
-                }
-            });
 
             
     for(var i = 0;i<100;i++){
             
 //create a fish sprite
             var fish = new Hilo.Sprite({
-                frames: atlas.getSprite('fish'),
+                frames: {width:174, height:126, image: 'images/fish.png', rect:[0,0,174,1512]},
                 x: 10 * (i%50),
                 y: 100 * (i%8),
-                interval: 1,
-                timeBased: false,
+                duration: 100,
                 loop: true,
                 onUpdate: function(){
                     if(this.x > stage.width - this.pivotX){
@@ -250,7 +235,7 @@ function onLoad(){
             }).addTo(stage);
 
             //dom element
-            var blueRect = new Hilo.DOMElement({
+            var blueRect = new Hilo.Element({
                 id: 'blueRect',
                 element: Hilo.createElement('div', {
                     style: {
@@ -265,7 +250,7 @@ function onLoad(){
             }).addTo(stage);
 
             //dom element
-            var yellowRect = new Hilo.DOMElement({
+            var yellowRect = new Hilo.Element({
                 id: 'yellowRect',
                 element: Hilo.createElement('div', {
                     style: {
@@ -280,7 +265,7 @@ function onLoad(){
             }).addTo(stage);
 
             //dom element
-            var redRect = new Hilo.DOMElement({
+            var redRect = new Hilo.Element({
                 id: 'redRect',
                 element: Hilo.createElement('div', {
                     style: {
@@ -325,5 +310,14 @@ function onLoad(){
                 fps.text = "FPS:"+ticker.getMeasuredFPS();
 	    }
 
+            var lbl = new Hilo.Label({
+                font:{text:'0235689471', width:64, height:64, image:'images/num.png', rect:[0,0,256,256]},
+                text: "00",
+                x: 400,
+                y: 40,
+            }).addTo(stage);
 
+            lbl.onUpdate = function(){
+                lbl.setText(ticker.getMeasuredFPS());
+	    }
 }
