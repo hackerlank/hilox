@@ -74,7 +74,7 @@ var Label = Class.create(/** @lends Label.prototype */{
             }
         }
         this.glyphs = glyphs;
-        console.log(JSON.stringify(this.glyphs));
+
         if(this.text != ''){
             var str = this.text;
             this.text = '';
