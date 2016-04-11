@@ -36,8 +36,8 @@ var Element = Class.create(/** @lends Element.prototype */{
         Element.superclass.constructor.call(this, properties);
 
         this.drawable = new Drawable();
-        var elem = this.drawable.domElement = (properties.element || Hilo.createElement('div', {style: {position: 'absolute'}}));
-        elem.id = this.id;
+        this.element = this.drawable.domElement = (properties.element || Hilo.createElement('div', {style: {position: 'absolute'}}));
+        this.element.id = this.id;
     },
 
     /**
