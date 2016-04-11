@@ -264,23 +264,90 @@ return {
         //render image as background
         var image = drawable.image;
         if(image){
-            var src = image.src;
-            if(src !== stateCache.image){
-                stateCache.image = src;
-                style.backgroundImage = 'url(' + src + ')';
+            var split = drawable.split;
+            if(split){
+                Hilo.setElementStyleBySplit(stateCache, drawable, obj.width, obj.height);
+            }else{
+                Hilo.setElementStyleByImage(stateCache, drawable);
+            }
+            
+        }
+    },
+    setElementStyleByImage:function(stateCache, drawable){
+        var style = drawable.domElement.style;
+        var image = drawable.image;
+        var rect = drawable.rect;
+        var src = image.src;
+        if(src !== stateCache.image){
+            stateCache.image = src;
+            style.backgroundImage = 'url(' + src + ')';
+        }
+
+        if(rect){
+            var sx = rect[0], sy = rect[1];
+            if(sx !== stateCache.sx){
+                stateCache.sx = sx;
+                style.backgroundPositionX = -sx + 'px';
+            }
+            if(sy !== stateCache.sy){
+                stateCache.sy = sy;
+                style.backgroundPositionY = -sy + 'px';
+            }
+        }
+    },
+    setElementStyleBySplit:function(stateCache, drawable, w, h){
+        var prefix = Hilo.browser.jsVendor, px = 'px';
+        var image = drawable.image, src = image.src;
+        var rect = drawable.rect, 
+            sx = (rect && rect[0]) || 0, 
+            sy = (rect && rect[1]) || 0,
+            sw = (rect && rect[2]) || image.width,
+            sh = (rect && rect[3]) || image.height;
+       
+        if(src !== stateCache.image || sx !== stateCache.sx || sy !== stateCache.sy){
+            stateCache.image = src;
+            stateCache.sx = sx;
+            stateCache.sy = sy;
+            
+            var split = drawable.split;
+            var list = drawable.domScale9Image;
+            if(list == null){
+                list = [];
+                for(var i = 0; i < 9; i++){
+                    var dd = Hilo.createElement('div', {style: {position: 'absolute'}})
+                    drawable.domElement.appendChild(dd);
+                    list[i] = dd;
+                }
+                drawable.domScale9Image = list;
             }
 
-            var rect = drawable.rect;
-            if(rect){
-                var sx = rect[0], sy = rect[1];
-                if(sx !== stateCache.sx){
-                    stateCache.sx = sx;
-                    style.backgroundPositionX = -sx + px;
-                }
-                if(sy !== stateCache.sy){
-                    stateCache.sy = sy;
-                    style.backgroundPositionY = -sy + px;
-                }
+
+            var w1 = split[0],w2=split[2],w3=sw-w1-w2,
+                h1 =split[1],h2=split[3],h3=sh-h1-h2;
+            var pos = [
+                [0,     0,      w1, h1, 0,      0,      w1,     h1],
+                [w1,    0,      w2, h1, w1,     0,      w-w1-w3,h1],
+                [w1+w2, 0,      w3, h1, w-w3,   0,      w3,     h1],
+                [0,     h1,     w1, h2, 0,      h1,     w1,     h-h1-h3],
+                [w1,    h1,     w2, h2, w1,     h1,     w-w1-w3,h-h1-h3],
+                [w1+w2, h1,     w3, h2, w-w3,   h1,     w3,     h-h1-h3],
+                [0,     h1+h2,  w1, h3, 0,      h-h3,   w1,     h3],
+                [w1,    h1+h2,  w2, h3, w1,     h-h3,   w-w1-w3,h3],
+                [w1+w2, h1+h2,  w3, h3, w-w3,   h-h3,   w3,     h3],
+            ];
+            
+            for(var i = 0; i < 9; i++){         
+                var pp = pos[i];
+                var dd = list[i];
+                var style = dd.style;
+                style.border = 'none';
+                style.width = pp[2] + 'px';
+                style.height = pp[3] + 'px';
+                style.backgroundImage = 'url(' + src + ')';
+                style.backgroundPositionX = -pp[0] + 'px';
+                style.backgroundPositionY = -pp[1] + 'px';
+                style[prefix + 'TransformOrigin'] = '0' + px + ' 0' + px;
+                style[prefix + 'Transform'] = 'translate('+pp[4]+'px, '+pp[5]+'px) scale('+(pp[6]/pp[2]*1.001)+', '+(pp[7]/pp[3]*1.001)+')';
             }
         }
     },

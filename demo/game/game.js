@@ -114,7 +114,7 @@ function onLoad(){
 
 
             
-    for(var i = 0;i<100;i++){
+    for(var i = 0;i<0;i++){
             
 //create a fish sprite
             var fish = new Hilo.Sprite({
@@ -230,7 +230,11 @@ function onLoad(){
             var bmp = new Hilo.Bitmap({
                 image: 'images/fish.png',
                 rect: [0, 0, 174, 126],
-                x: 75,
+                split: [60,60,54,6],
+                width:500,
+                height:500,
+                //scaleX:2,
+                x: 0,
                 y: 20
             }).addTo(stage);
 

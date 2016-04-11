@@ -20,6 +20,7 @@ var Class = Hilo.Class;
  * @requires hilo/core/Class
  * @property {Object} image 要绘制的图像。即可被CanvasRenderingContext2D.drawImage使用的对象类型，可以是HTMLImageElement、HTMLCanvasElement、HTMLVideoElement等对象。
  * @property {array} rect 要绘制的图像的矩形区域。
+ * @property {array} split 九宫格区域。
  * @property {Object} domElement DOM实体
  */
 var Drawable = Class.create(/** @lends Drawable.prototype */{
@@ -29,6 +30,7 @@ var Drawable = Class.create(/** @lends Drawable.prototype */{
 
     image: null,
     rect: null,
+    split: null,
     domElement: null,
 
     /**

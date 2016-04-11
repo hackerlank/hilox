@@ -58,8 +58,8 @@ var Drawable = Hilo.Drawable;
      * @param {Array} rect 指定位图在图片image的矩形区域。
      * @returns {Bitmap} 位图本身。
      */
-    setImage: function(image, rect){
-        this.drawable.init({image:image, rect:rect});
+    setImage: function(image, rect, split){
+        this.drawable.init({image:image, rect:rect, split:split});
         if(rect){
             this.width = rect[2];
             this.height = rect[3];
