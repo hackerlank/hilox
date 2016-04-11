@@ -40,8 +40,8 @@ var ScriptLoader = Class.create({
         var script = document.createElement('script');
         script.type = 'text/javascript';
         script.async = true;
-        script.onload = me.onLoad.bind(me);
-        script.onerror = me.onError.bind(me);
+        script.onload = function(e){ me.onLoad(e); };
+        script.onerror = function(e){ me.onError(e); };
         script.src = src;
         if(data.id) script.id = data.id;
         document.getElementsByTagName('head')[0].appendChild(script);

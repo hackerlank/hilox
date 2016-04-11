@@ -27,17 +27,13 @@ var ImageLoader = Class.create({
             image.crossOrigin = data.crossOrigin;
         }
 
-        image.onload = //me.onLoad.bind(image);
-        function(){
-            me.onLoad(image)
-        };
-        image.onerror = image.onabort = me.onError.bind(image);
+        image.onload = function(e){ me.onLoad(e); };
+        image.onerror = image.onabort = function(e){ me.onError(e); };
         image.src = data.src + (data.noCache ? (data.src.indexOf('?') == -1 ? '?' : '&') + 't=' + (+new Date) : '');
     },
 
     onLoad: function(e){
-        e = e||window.event;
-        var image = e//e.target;
+        var image = e.target;
         image.onload = image.onerror = image.onabort = null;
         return image;
     },
