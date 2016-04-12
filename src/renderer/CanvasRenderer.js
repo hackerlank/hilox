@@ -70,7 +70,27 @@ var CanvasRenderer = Class.create(/** @lends CanvasRenderer.prototype */{
         var drawable = target.drawable, image = drawable && drawable.image;
         if(image){
             var rect = drawable.rect;
-            ctx.drawImage(image, rect[0], rect[1], rect[2], rect[3], 0, 0, w, h);
+            var split = drawable.split;
+            if(split){
+                var sx = (rect && rect[0]) || 0, 
+                    sy = (rect && rect[1]) || 0,
+                    sw = (rect && rect[2]) || image.width,
+                    sh = (rect && rect[3]) || image.height,
+                    w1 = split[0],w2=split[2],w3=sw-w1-w2,
+                    h1 =split[1],h2=split[3],h3=sh-h1-h2;
+                
+                ctx.drawImage(image, sx+0,     sy+0,      w1, h1, 0,      0,      w1,     h1);
+                ctx.drawImage(image, sx+w1,    sy+0,      w2, h1, w1,     0,      w-w1-w3,h1);
+                ctx.drawImage(image, sx+w1+w2, sy+0,      w3, h1, w-w3,   0,      w3,     h1);
+                ctx.drawImage(image, sx+0,     sy+h1,     w1, h2, 0,      h1,     w1,     h-h1-h3);
+                ctx.drawImage(image, sx+w1,    sy+h1,     w2, h2, w1,     h1,     w-w1-w3,h-h1-h3);
+                ctx.drawImage(image, sx+w1+w2, sy+h1,     w3, h2, w-w3,   h1,     w3,     h-h1-h3);
+                ctx.drawImage(image, sx+0,     sy+h1+h2,  w1, h3, 0,      h-h3,   w1,     h3);
+                ctx.drawImage(image, sx+w1,    sy+h1+h2,  w2, h3, w1,     h-h3,   w-w1-w3,h3);
+                ctx.drawImage(image, sx+w1+w2, sy+h1+h2,  w3, h3, w-w3,   h-h3,   w3,     h3);
+            }else{
+                ctx.drawImage(image, rect[0], rect[1], rect[2], rect[3], 0, 0, w, h);
+            }
         }
     },
 
@@ -90,6 +110,8 @@ var CanvasRenderer = Class.create(/** @lends CanvasRenderer.prototype */{
         var ctx = this.context,
             x = target.x,
             y = target.y,
+            w = target.width, 
+            h = target.height,
             scaleX = target.scaleX,
             scaleY = target.scaleY,
             pivotX = target.pivotX,
@@ -105,8 +127,7 @@ var CanvasRenderer = Class.create(/** @lends CanvasRenderer.prototype */{
             }else{
                 var parent = target.parent;
                 if(parent){
-                    var w = target.width, h = target.height,
-                        pw = parent.width, ph = parent.height;
+                    var pw = parent.width, ph = parent.height;
                     switch(align){
                         case 'TL':
                             x = 0;
@@ -152,7 +173,7 @@ var CanvasRenderer = Class.create(/** @lends CanvasRenderer.prototype */{
         if(x != 0 || y != 0) ctx.translate(x, y);
         if(rotation != 0) ctx.rotate(rotation * Math.PI / 180);
         if(scaleX != 1 || scaleY != 1) ctx.scale(scaleX, scaleY);
-        if(pivotX != 0 || pivotY != 0) ctx.translate(-pivotX, -pivotY);
+        if(pivotX != 0 || pivotY != 0) ctx.translate(-pivotX*w, -pivotY*h);
         if(target.alpha > 0) ctx.globalAlpha *= target.alpha;
     },
 

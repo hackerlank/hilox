@@ -6,8 +6,9 @@
 (function(window){
 var Hilo = window.Hilo;
 var Class = Hilo.Class;
-var View = Hilo.View;
 var Drawable = Hilo.Drawable;
+var DOMRenderer = Hilo.DOMRenderer;
+var View = Hilo.View;
 /**
  * Hilo
  * Copyright 2015 alibaba.com
@@ -26,6 +27,7 @@ var Drawable = Hilo.Drawable;
  * @requires hilo/core/Hilo
  * @requires hilo/core/Class
  * @requires hilo/core/Drawable
+ * @requires hilo/renderer/DOMRenderer
  * @requires hilo/view/View
  */
 var Element = Class.create(/** @lends Element.prototype */{
@@ -59,7 +61,7 @@ var Element = Class.create(/** @lends Element.prototype */{
     render: function(renderer, delta){
         var canvas = renderer.canvas;
         if(renderer.renderType != 'dom'){
-            Hilo.setElementStyleByView(this);
+            DOMRenderer.setElementStyleByView(this);
         }else{
             renderer.draw(this);
         }

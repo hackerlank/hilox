@@ -51,7 +51,6 @@ var Label = Class.create(/** @lends Label.prototype */{
     glyphs: null,
     spacing: 0,
     text: '',
-    textAlign:'left',
     
      /**
       * 设置图片字体
@@ -119,32 +118,9 @@ var Label = Class.create(/** @lends Label.prototype */{
 
         me.width = width;
         me.height = height;
-        this.setTextAlign();
         return me;
     },
     
-
-     /**
-     * 设置位图文本的对齐方式。
-     * @param textAlign 文本对齐方式，值为left、center、right
-     * @returns {Label} Label对象本身。链式调用支持。
-     */
-    setTextAlign:function(textAlign){
-        this.textAlign = textAlign||this.textAlign;
-        switch(this.textAlign){
-            case "center":
-                this.pivotX = this.width * .5;
-                break;
-            case "right":
-                this.pivotX = this.width;
-                break;
-            case "left":
-            default:
-                this.pivotX = 0;
-                break;
-        }
-        return this;
-    },
 
    
     Statics:/** @lends Label */{

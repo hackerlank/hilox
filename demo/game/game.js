@@ -114,7 +114,7 @@ function onLoad(){
 
 
             
-    for(var i = 0;i<0;i++){
+    for(var i = 0;i<20;i++){
             
 //create a fish sprite
             var fish = new Hilo.Sprite({
@@ -136,10 +136,10 @@ function onLoad(){
     var root = new Hilo.Container({
 	        background: '#ffe',
 	        clipChildren: true,
-	        //alpha:0.5,
+	        alpha:0.5,
 	        width:400,
 	        height:400,
-	        x:300,
+	        x:265,
 	        y:300,
 	        rotation:45
 	    }).addTo(stage);
@@ -150,10 +150,11 @@ function onLoad(){
                 //alpha:0.5,
                 width:300,
                 height:300,
-                x:0,
-                y:0,
+                x:200,
+                y:200,
                 rotation:10
             }).addTo(root);
+
     //green button
     var greenBtn = new Hilo.Button({
         id: 'greenBtn',
@@ -231,11 +232,12 @@ function onLoad(){
                 image: 'images/fish.png',
                 rect: [0, 0, 174, 126],
                 split: [60,60,54,6],
-                width:500,
-                height:500,
+                width:300,
+                height:300,
                 //scaleX:2,
                 x: 0,
-                y: 20
+                y: 20,
+                background:'#0e0'
             }).addTo(stage);
 
             //dom element
@@ -324,4 +326,5 @@ function onLoad(){
             lbl.onUpdate = function(){
                 lbl.setText(ticker.getMeasuredFPS());
 	    }
+
 }

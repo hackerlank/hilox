@@ -193,8 +193,8 @@ return Class.create(/** @lends View.prototype */{
                 sin = Math.sin(r);
             }
 
-            if(pivotX != 0) mtx.tx -= pivotX;
-            if(pivotY != 0) mtx.ty -= pivotY;
+            if(pivotX != 0) mtx.tx -= pivotX*o.width;
+            if(pivotY != 0) mtx.ty -= pivotY*o.height;
             mtx.concat(cos*scaleX, sin*scaleX, -sin*scaleY, cos*scaleY, o.x, o.y);
         }
         return mtx;

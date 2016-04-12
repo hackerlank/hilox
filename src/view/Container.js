@@ -7,7 +7,9 @@
 var Hilo = window.Hilo;
 var Class = Hilo.Class;
 var Drawable = Hilo.Drawable;
+var DOMRenderer = Hilo.DOMRenderer;
 var View = Hilo.View;
+
 /**
  * Hilo
  * Copyright 2015 alibaba.com
@@ -22,6 +24,7 @@ var View = Hilo.View;
  * @requires hilo/core/Hilo
  * @requires hilo/core/Class
  * @requires hilo/core/Drawable
+ * @requires hilo/renderer/DOMRenderer
  * @requires hilo/view/View
  * @property {Array} children 容器的子元素列表。只读。
  * @property {Boolean} pointerChildren 指示容器的子元素是否能响应用户交互事件。默认为true。
@@ -351,7 +354,7 @@ var Container = Class.create(/** @lends Container.prototype */{
                 this._domContainerUpdate();
             }
             if(this.drawable && this.drawable.domElement){
-                Hilo.setElementStyleByView(this, true);
+                DOMRenderer.setElementStyleByView(this, true);
             }
         }
 

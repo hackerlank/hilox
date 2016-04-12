@@ -159,7 +159,30 @@ var WebGLRenderer = Class.create(/** @lends WebGLRenderer.prototype */{
         }
         if(image){
             this.defaultShader.active();
-            this._renderImage(target, image, drawable.rect);
+            
+            var rect = drawable.rect;
+            var split = drawable.split;
+            var w = target.width, h = target.height;
+            if(split){
+                var sx = (rect && rect[0]) || 0, 
+                    sy = (rect && rect[1]) || 0,
+                    sw = (rect && rect[2]) || image.width,
+                    sh = (rect && rect[3]) || image.height,
+                    w1 = split[0],w2=split[2],w3=sw-w1-w2,
+                    h1 =split[1],h2=split[3],h3=sh-h1-h2;
+                
+                this._renderImage(target, image, sx+0,     sy+0,      w1, h1, 0,      0,      w1,     h1);
+                this._renderImage(target, image, sx+w1,    sy+0,      w2, h1, w1,     0,      w-w1-w3,h1);
+                this._renderImage(target, image, sx+w1+w2, sy+0,      w3, h1, w-w3,   0,      w3,     h1);
+                this._renderImage(target, image, sx+0,     sy+h1,     w1, h2, 0,      h1,     w1,     h-h1-h3);
+                this._renderImage(target, image, sx+w1,    sy+h1,     w2, h2, w1,     h1,     w-w1-w3,h-h1-h3);
+                this._renderImage(target, image, sx+w1+w2, sy+h1,     w3, h2, w-w3,   h1,     w3,     h-h1-h3);
+                this._renderImage(target, image, sx+0,     sy+h1+h2,  w1, h3, 0,      h-h3,   w1,     h3);
+                this._renderImage(target, image, sx+w1,    sy+h1+h2,  w2, h3, w1,     h-h3,   w-w1-w3,h3);
+                this._renderImage(target, image, sx+w1+w2, sy+h1+h2,  w3, h3, w-w3,   h-h3,   w3,     h3);
+            }else{
+                this._renderImage(target, image, rect[0], rect[1], rect[2], rect[3], 0, 0, w, h);
+            }
         }
         
     },
@@ -228,7 +251,7 @@ var WebGLRenderer = Class.create(/** @lends WebGLRenderer.prototype */{
         gl.uniform4f(this.activeShader.u_color,c.r/255.0*a,c.g/255.0*a,c.b/255.0*a, a);
         
        
-        var w = target.width, h = target.height, x = -target.pivotX, y = target.pivotY - h;
+        var w = target.width, h = target.height, x = -target.pivotX*w, y = target.pivotY*h - h;
         var positions = this.vertex2;
           
         positions[0] = x;  
@@ -255,13 +278,13 @@ var WebGLRenderer = Class.create(/** @lends WebGLRenderer.prototype */{
         gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STREAM_DRAW);
         gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0);
     },
-    _renderImage:function(target, image, rect){
+    _renderImage:function(target, image, mx, my, mw, mh, x, y, w, h){
         if(!image.texture){
             this.activeShader.uploadTexture(image);
         }
         
-        var gl = this.gl, w = target.width, h = target.height, px = -target.pivotX, py = -target.pivotY;
-        var vertexs = this._createVertexs(image, rect[0], rect[1], rect[2], rect[3], px, py, w, h);
+        var gl = this.gl, px = -target.pivotX*w, py = -target.pivotY*h;
+        var vertexs = this._createVertexs(image, mx, my, mw, mh, px + x, py + y, w, h);
         var index = this.batchIndex * this.positionStride;
         var positions = this.vertex;
         var alpha = target.__webglRenderAlpha;
@@ -420,7 +443,6 @@ var WebGLRenderer = Class.create(/** @lends WebGLRenderer.prototype */{
         var mtx = view.__webglWorldMatrix;
         var cos = 1, sin = 0,
             rotation = 360-view.rotation % 360,
-            pivotX = view.pivotX, pivotY = view.pivotY,
             scaleX = view.scaleX, scaleY = view.scaleY;
 
         if(rotation){
@@ -436,6 +458,13 @@ var WebGLRenderer = Class.create(/** @lends WebGLRenderer.prototype */{
         mtx.tx = view.x;
         mtx.ty = -view.y;
 
+
+        var ppx = ancestor.pivotX, ppy = ancestor.pivotY;
+        if(ppx != 0 || ppy != 0){
+            mtx.tx -= ppx * ancestor.width;
+            mtx.ty += ppx * ancestor.height;
+        }
+        
         var aMtx = ancestor.__webglWorldMatrix;
         mtx.concat(aMtx.a, aMtx.b, aMtx.c, aMtx.d, aMtx.tx, aMtx.ty);
     }

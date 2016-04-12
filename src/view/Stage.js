@@ -68,6 +68,8 @@ var Stage = Class.create(/** @lends Stage.prototype */{
     renderer: null,
     paused: false,
     viewport: null,
+    pivotX: 0,
+    pivotY: 0,
 
     /**
      * @private
