@@ -36,15 +36,9 @@ var Label = Class.create(/** @lends Label.prototype */{
         Label.superclass.constructor.call(this, properties);
 
         if(properties.font){
-            this.setFont(properties.font);
+            this.genGlyphs(properties.font);
         }
         
-        var text = properties.text + '';
-        if(text){
-            this.text = '';
-            this.setText(text);
-        }
-
         this.pointerChildren = false; //disable user events for single letters
     },
 
@@ -56,7 +50,7 @@ var Label = Class.create(/** @lends Label.prototype */{
       * 设置图片字体
       * font: {text, width, height, image, rect}
       */
-    setFont:function(font){
+    genGlyphs:function(font){
         var str = font.text.toString(),
             image = font.image,
             rect = font.rect || [0,0,image.width,image.height],
@@ -73,52 +67,52 @@ var Label = Class.create(/** @lends Label.prototype */{
             }
         }
         this.glyphs = glyphs;
-
-        if(this.text != ''){
-            var str = this.text;
-            this.text = '';
-            this.setText(str);
-        }
     },
 
     /**
-     * 设置位图文本的文本内容。
-     * @param {String} text 要设置的文本内容。
-     * @returns {Label} Label对象本身。链式调用支持。
+     * 覆盖渲染方法。
+     * @private
      */
-    setText: function(text){
-        var me = this, str = text.toString(), len = str.length;
-        if(me.text == str) return;
-        me.text = str;
-
-        var i, charStr, charGlyph, charObj, width = 0, height = 0, left = 0;
-        for(i = 0; i < len; i++){
-            charStr = str.charAt(i);
-            charGlyph = me.glyphs[charStr];
-            if(charGlyph){
-                left = width + (width > 0 ? me.spacing : 0);
-                if(me.children[i]){
-                    charObj = me.children[i];
-                    charObj.setImage(charGlyph.image, charGlyph.rect);
+    render: function(renderer, delta){
+        
+        var me = this, str = me.text.toString(), spc = me.spacing, gls = me.glyphs;
+        if(me._text != str || me._spacing != spc || me._glyphs != gls){
+            me._text = str;
+            me._spacing = spc;
+            me._glyphs = gls;
+                                
+            var len = str.length;
+            var i, charStr, charGlyph, charObj, width = 0, height = 0, left = 0;
+            for(i = 0; i < len; i++){
+                charStr = str.charAt(i);
+                charGlyph = gls[charStr];
+                
+                if(charGlyph){
+                    left = width + (width > 0 ? me.spacing : 0);
+                    if(me.children[i]){
+                        charObj = me.children[i];
+                        charObj.setImage(charGlyph.image, charGlyph.rect);
+                    }
+                    else{
+                        charObj = Label._createBitmap(charGlyph);
+                        me.addChild(charObj);
+                    }
+                    charObj.x = left;
+                    width = left + charGlyph.rect[2];
+                    height = Math.max(height, charGlyph.rect[3]);
                 }
-                else{
-                    charObj = Label._createBitmap(charGlyph);
-                    me.addChild(charObj);
-                }
-                charObj.x = left;
-                width = left + charGlyph.rect[2];
-                height = Math.max(height, charGlyph.rect[3]);
             }
-        }
 
-        for(i = me.children.length - 1;i >= len;i --){
-            Label._releaseBitmap(me.children[i]);
-            me.removeChild(me.children[i]);
-        }
+            for(i = me.children.length - 1;i >= len;i --){
+                Label._releaseBitmap(me.children[i]);
+                me.removeChild(me.children[i]);
+            }
 
-        me.width = width;
-        me.height = height;
-        return me;
+            me.width = width;
+            me.height = height;
+        }
+        
+        Label.superclass.render.call(this, renderer, delta);
     },
     
 

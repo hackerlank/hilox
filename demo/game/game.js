@@ -324,7 +324,7 @@ function onLoad(){
             }).addTo(stage);
 
             lbl.onUpdate = function(){
-                lbl.setText(ticker.getMeasuredFPS());
+                lbl.text = ticker.getMeasuredFPS();
 	    }
 
 }

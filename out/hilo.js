@@ -305,108 +305,7 @@ return {
         return elem;
     },
 
-    /**
-     * 设置可视对象DOM元素的CSS样式。
-     * @param {View} obj 指定要设置CSS样式的可视对象。
-     * @private
-     */
-    setElementStyleByView: function(obj, ignoreView){
-        var prefix = Hilo.browser.jsVendor, px = 'px', flag = false;
-        var parent = obj.parent,
-            drawable = obj.drawable,
-            elem = drawable.domElement,
-            style = elem.style,
-            stateCache = obj._stateCache || (obj._stateCache = {});
-        
-        if(parent){
-            var parentElem = parent.drawable && parent.drawable.domElement;
-            if(parentElem && parentElem != elem.parentNode){
-                parentElem.appendChild(elem);
-            }
-        }
-
-        if(this.cacheStateIfChanged(obj, ['visible'], stateCache)){
-            style.display = !obj.visible ? 'none' : '';
-        }
-        if(this.cacheStateIfChanged(obj, ['alpha'], stateCache)){
-            style.opacity = obj.alpha;
-        }
-        if(!obj.visible || obj.alpha <= 0) return;
-
-        if(this.cacheStateIfChanged(obj, ['width'], stateCache)){
-            style.width = (obj.width||0) + px;
-        }
-        if(this.cacheStateIfChanged(obj, ['height'], stateCache)){
-            style.height = (obj.height||0) + px;
-        }
-        if(this.cacheStateIfChanged(obj, ['depth'], stateCache)){
-            style.zIndex = obj.depth + 1;
-        }
-        if(this.cacheStateIfChanged(obj, ['clipChildren'], stateCache)){
-            style.overflow = obj.clipChildren?'hidden':null;
-        }
-        if(flag = this.cacheStateIfChanged(obj, ['pivotX', 'pivotY'], stateCache)){
-            style[prefix + 'TransformOrigin'] = obj.pivotX + px + ' ' + obj.pivotY + px;
-        }
-        if(this.cacheStateIfChanged(obj, ['x', 'y', 'rotation', 'scaleX', 'scaleY'], stateCache) || flag){
-            style[prefix + 'Transform'] = 'translate(' + (obj.x - obj.pivotX) + 'px, ' + (obj.y - obj.pivotY) + 'px)' +
-                                          'rotate(' + obj.rotation + 'deg)' +
-                                          'scale(' + obj.scaleX + ', ' + obj.scaleY + ')';
-        }
-        
-        if(ignoreView){
-            style.pointerEvents = 'none';
-            return;
-        } 
-        
-        if(!style.pointerEvents){
-            style.pointerEvents = 'none';
-        }
-
-        if(this.cacheStateIfChanged(obj, ['background'], stateCache)){
-            style.backgroundColor = obj.background;
-        }
-        
-        //render image as background
-        var image = drawable.image;
-        if(image){
-            var src = image.src;
-            if(src !== stateCache.image){
-                stateCache.image = src;
-                style.backgroundImage = 'url(' + src + ')';
-            }
-
-            var rect = drawable.rect;
-            if(rect){
-                var sx = rect[0], sy = rect[1];
-                if(sx !== stateCache.sx){
-                    stateCache.sx = sx;
-                    style.backgroundPositionX = -sx + px;
-                }
-                if(sy !== stateCache.sy){
-                    stateCache.sy = sy;
-                    style.backgroundPositionY = -sy + px;
-                }
-            }
-        }
-    },
-
-    /**
-     * @private
-     */
-    cacheStateIfChanged: function(obj, propNames, stateCache){
-        var i, len, name, value, changed = false;
-        for(i = 0, len = propNames.length; i < len; i++){
-            name = propNames[i];
-            value = obj[name];
-            if(value != stateCache[name]){
-                stateCache[name] = value;
-                changed = true;
-            }
-        }
-        return changed;
-    },
-
+  
 };
 
 })();
@@ -1070,6 +969,7 @@ var Class = Hilo.Class;
  * @requires hilo/core/Class
  * @property {Object} image 要绘制的图像。即可被CanvasRenderingContext2D.drawImage使用的对象类型，可以是HTMLImageElement、HTMLCanvasElement、HTMLVideoElement等对象。
  * @property {array} rect 要绘制的图像的矩形区域。
+ * @property {array} split 九宫格区域。
  * @property {Object} domElement DOM实体
  */
 var Drawable = Class.create(/** @lends Drawable.prototype */{
@@ -1079,6 +979,7 @@ var Drawable = Class.create(/** @lends Drawable.prototype */{
 
     image: null,
     rect: null,
+    split: null,
     domElement: null,
 
     /**
@@ -1169,8 +1070,8 @@ var ScriptLoader = Class.create({
         var script = document.createElement('script');
         script.type = 'text/javascript';
         script.async = true;
-        script.onload = me.onLoad.bind(me);
-        script.onerror = me.onError.bind(me);
+        script.onload = function(e){ me.onLoad(e); };
+        script.onerror = function(e){ me.onError(e); };
         script.src = src;
         if(data.id) script.id = data.id;
         document.getElementsByTagName('head')[0].appendChild(script);
@@ -1223,17 +1124,13 @@ var ImageLoader = Class.create({
             image.crossOrigin = data.crossOrigin;
         }
 
-        image.onload = //me.onLoad.bind(image);
-        function(){
-            me.onLoad(image)
-        };
-        image.onerror = image.onabort = me.onError.bind(image);
+        image.onload = function(e){ me.onLoad(e); };
+        image.onerror = image.onabort = function(e){ me.onError(e); };
         image.src = data.src + (data.noCache ? (data.src.indexOf('?') == -1 ? '?' : '&') + 't=' + (+new Date) : '');
     },
 
     onLoad: function(e){
-        e = e||window.event;
-        var image = e//e.target;
+        var image = e.target;
         image.onload = image.onerror = image.onabort = null;
         return image;
     },
@@ -2168,7 +2065,7 @@ return Class.create({
      */
     startDraw: function(target){ 
         var drawable = (target.drawable = target.drawable || new Drawable());
-        drawable.domElement = (drawable.domElement || Hilo.createElement('div', {style: {position: 'absolute'}}));
+        drawable.domElement = (drawable.domElement || Hilo.createElement('div', {id:target.id, style: {position: 'absolute'}}));
 
         return target.visible; 
     },
@@ -2178,7 +2075,7 @@ return Class.create({
      * @param {View} target 要绘制的可视对象。
      */
     draw: function(target){
-        Hilo.setElementStyleByView(target);
+        DOMRenderer.setElementStyleByView(target);
     },
 
 
@@ -2193,7 +2090,195 @@ return Class.create({
         if(style.position != "absolute") {
           style.position = "relative";
         }
-    }
+    },
+    
+    Statics: /** @lends Drawable */{
+        /**
+         * 设置可视对象DOM元素的CSS样式。
+         * @param {View} obj 指定要设置CSS样式的可视对象。
+         * @private
+         */
+        setElementStyleByView: function(obj, ignoreView){
+            var prefix = Hilo.browser.jsVendor, px = 'px', flag = false;
+            var parent = obj.parent,
+                drawable = obj.drawable,
+                elem = drawable.domElement,
+                style = elem.style,
+                stateCache = obj._stateCache || (obj._stateCache = {});
+
+            if(parent){
+                var parentElem = parent.drawable && parent.drawable.domElement;
+                if(parentElem && parentElem != elem.parentNode){
+                    parentElem.appendChild(elem);
+                }
+            }
+
+            if(this.cacheStateIfChanged(obj, ['visible'], stateCache)){
+                style.display = !obj.visible ? 'none' : '';
+            }
+            if(this.cacheStateIfChanged(obj, ['alpha'], stateCache)){
+                style.opacity = obj.alpha;
+            }
+            if(!obj.visible || obj.alpha <= 0) return;
+
+            if(this.cacheStateIfChanged(obj, ['width'], stateCache)){
+                flag = true;
+                style.width = obj.width + px;
+            }
+            if(this.cacheStateIfChanged(obj, ['height'], stateCache)){
+                flag = true;
+                style.height = obj.height + px;
+            }
+            if(this.cacheStateIfChanged(obj, ['depth'], stateCache)){
+                style.zIndex = obj.depth + 1;
+            }
+            if(this.cacheStateIfChanged(obj, ['clipChildren'], stateCache)){
+                style.overflow = obj.clipChildren?'hidden':null;
+            }
+            if(flag || this.cacheStateIfChanged(obj, ['pivotX', 'pivotY'], stateCache)){
+                flag = true;
+                style[prefix + 'TransformOrigin'] = (obj.pivotX * obj.width) + px + ' ' + (obj.pivotY * obj.height) + px;
+            }
+            if(flag || this.cacheStateIfChanged(obj, ['x', 'y', 'rotation', 'scaleX', 'scaleY'], stateCache)){
+                flag = true;
+                style[prefix + 'Transform'] = 'translate(' + (obj.x - obj.pivotX*obj.width) + 'px, ' + (obj.y - obj.pivotY*obj.height) + 'px)' +
+                                              'rotate(' + obj.rotation + 'deg)' +
+                                              'scale(' + obj.scaleX + ', ' + obj.scaleY + ')';
+            }
+
+            if(ignoreView){
+                style.pointerEvents = 'none';
+                return;
+            } 
+
+            if(!style.pointerEvents){
+                style.pointerEvents = 'none';
+            }
+
+            if(this.cacheStateIfChanged(obj, ['background'], stateCache)){
+                style.backgroundColor = obj.background;
+            }
+
+            //render image as background
+            var image = drawable.image;
+            if(image){
+                var split = drawable.split;
+                if(split){
+                    this.setElementStyleBySplit(stateCache, obj, flag);
+                }else{
+                    this.setElementStyleByImage(stateCache, obj, flag);
+                }
+
+            }
+        },
+        setElementStyleByImage:function(stateCache, obj, flag){
+            var drawable = obj.drawable;
+            var style = drawable.domElement.style;
+            var image = drawable.image;
+            var rect = drawable.rect;
+            var src = image.src;
+            if(src !== stateCache.image){
+                stateCache.image = src;
+                style.backgroundImage = 'url(' + src + ')';
+            }
+
+            if(rect){
+                var prefix = Hilo.browser.jsVendor, px = 'px';
+                var sx = rect[0], sy = rect[1], sw = rect[2], sh = rect[3];
+                if(sx !== stateCache.sx){
+                    stateCache.sx = sx;
+                    style.backgroundPositionX = -sx + px;
+                }
+                if(sy !== stateCache.sy){
+                    stateCache.sy = sy;
+                    style.backgroundPositionY = -sy + px;
+                }
+                
+                if(flag && (sw != obj.width || sh != obj.height)){
+                    var kx = sw/obj.width, ky = sh/obj.height;
+                    style.width = sw + px;
+                    style.height = sh + px;
+                    style[prefix + 'TransformOrigin'] = obj.pivotX*sw + px + ' ' + obj.pivotY*sh + px;
+                    style[prefix + 'Transform'] = 'translate(' + (obj.x - obj.pivotX*sw) + 'px, ' + (obj.y - obj.pivotY*sh) + 'px)' +
+                                              'rotate(' + obj.rotation + 'deg)' +
+                                              'scale(' + obj.scaleX/kx + ', ' + obj.scaleY/ky + ')';
+                }
+            }
+        },
+        setElementStyleBySplit:function(stateCache, obj, flag){
+            var drawable = obj.drawable, w = obj.width, h = obj.height;
+            var prefix = Hilo.browser.jsVendor, px = 'px';
+            var image = drawable.image, src = image.src;
+            var rect = drawable.rect, 
+                sx = (rect && rect[0]) || 0, 
+                sy = (rect && rect[1]) || 0,
+                sw = (rect && rect[2]) || image.width,
+                sh = (rect && rect[3]) || image.height;
+
+            if(src !== stateCache.image || sx !== stateCache.sx || sy !== stateCache.sy){
+                stateCache.image = src;
+                stateCache.sx = sx;
+                stateCache.sy = sy;
+
+                var split = drawable.split;
+                var list = drawable.domScale9Image;
+                if(list == null){
+                    list = [];
+                    for(var i = 0; i < 9; i++){
+                        var dd = Hilo.createElement('div', {style: {position: 'absolute'}})
+                        drawable.domElement.appendChild(dd);
+                        list[i] = dd;
+                    }
+                    drawable.domScale9Image = list;
+                }
+
+
+                var w1 = split[0],w2=split[2],w3=sw-w1-w2,
+                    h1 =split[1],h2=split[3],h3=sh-h1-h2;
+                var pos = [
+                    [sx + 0,     sy + 0,      w1, h1, 0,      0,      w1,     h1],
+                    [sx + w1,    sy + 0,      w2, h1, w1,     0,      w-w1-w3,h1],
+                    [sx + w1+w2, sy + 0,      w3, h1, w-w3,   0,      w3,     h1],
+                    [sx + 0,     sy + h1,     w1, h2, 0,      h1,     w1,     h-h1-h3],
+                    [sx + w1,    sy + h1,     w2, h2, w1,     h1,     w-w1-w3,h-h1-h3],
+                    [sx + w1+w2, sy + h1,     w3, h2, w-w3,   h1,     w3,     h-h1-h3],
+                    [sx + 0,     sy + h1+h2,  w1, h3, 0,      h-h3,   w1,     h3],
+                    [sx + w1,    sy + h1+h2,  w2, h3, w1,     h-h3,   w-w1-w3,h3],
+                    [sx + w1+w2, sy + h1+h2,  w3, h3, w-w3,   h-h3,   w3,     h3],
+                ];
+
+                for(var i = 0; i < 9; i++){         
+                    var pp = pos[i];
+                    var dd = list[i];
+                    var style = dd.style;
+                    style.border = 'none';
+                    style.width = pp[2] + px;
+                    style.height = pp[3] + px;
+                    style.backgroundImage = 'url(' + src + ')';
+                    style.backgroundPositionX = -pp[0] + px;
+                    style.backgroundPositionY = -pp[1] + px;
+                    style[prefix + 'TransformOrigin'] = '0' + px + ' 0' + px;
+                    style[prefix + 'Transform'] = 'translate('+pp[4]+'px, '+pp[5]+'px) scale('+(pp[6]/pp[2]*1.001)+', '+(pp[7]/pp[3]*1.001)+')';
+                }
+            }
+        },
+
+        /**
+         * @private
+         */
+        cacheStateIfChanged: function(obj, propNames, stateCache){
+            var i, len, name, value, changed = false;
+            for(i = 0, len = propNames.length; i < len; i++){
+                name = propNames[i];
+                value = obj[name];
+                if(value != stateCache[name]){
+                    stateCache[name] = value;
+                    changed = true;
+                }
+            }
+            return changed;
+        },
+    },
 });
 
 
@@ -2362,7 +2447,30 @@ var WebGLRenderer = Class.create(/** @lends WebGLRenderer.prototype */{
         }
         if(image){
             this.defaultShader.active();
-            this._renderImage(target, image, drawable.rect);
+            
+            var rect = drawable.rect;
+            var split = drawable.split;
+            var w = target.width, h = target.height;
+            if(split){
+                var sx = (rect && rect[0]) || 0, 
+                    sy = (rect && rect[1]) || 0,
+                    sw = (rect && rect[2]) || image.width,
+                    sh = (rect && rect[3]) || image.height,
+                    w1 = split[0],w2=split[2],w3=sw-w1-w2,
+                    h1 =split[1],h2=split[3],h3=sh-h1-h2;
+                
+                this._renderImage(target, image, sx+0,     sy+0,      w1, h1, 0,      0,      w1,     h1);
+                this._renderImage(target, image, sx+w1,    sy+0,      w2, h1, w1,     0,      w-w1-w3,h1);
+                this._renderImage(target, image, sx+w1+w2, sy+0,      w3, h1, w-w3,   0,      w3,     h1);
+                this._renderImage(target, image, sx+0,     sy+h1,     w1, h2, 0,      h1,     w1,     h-h1-h3);
+                this._renderImage(target, image, sx+w1,    sy+h1,     w2, h2, w1,     h1,     w-w1-w3,h-h1-h3);
+                this._renderImage(target, image, sx+w1+w2, sy+h1,     w3, h2, w-w3,   h1,     w3,     h-h1-h3);
+                this._renderImage(target, image, sx+0,     sy+h1+h2,  w1, h3, 0,      h-h3,   w1,     h3);
+                this._renderImage(target, image, sx+w1,    sy+h1+h2,  w2, h3, w1,     h-h3,   w-w1-w3,h3);
+                this._renderImage(target, image, sx+w1+w2, sy+h1+h2,  w3, h3, w-w3,   h-h3,   w3,     h3);
+            }else{
+                this._renderImage(target, image, rect[0], rect[1], rect[2], rect[3], 0, 0, w, h);
+            }
         }
         
     },
@@ -2431,7 +2539,7 @@ var WebGLRenderer = Class.create(/** @lends WebGLRenderer.prototype */{
         gl.uniform4f(this.activeShader.u_color,c.r/255.0*a,c.g/255.0*a,c.b/255.0*a, a);
         
        
-        var w = target.width, h = target.height, x = -target.pivotX, y = target.pivotY - h;
+        var w = target.width, h = target.height, x = -target.pivotX*w, y = target.pivotY*h - h;
         var positions = this.vertex2;
           
         positions[0] = x;  
@@ -2458,13 +2566,13 @@ var WebGLRenderer = Class.create(/** @lends WebGLRenderer.prototype */{
         gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STREAM_DRAW);
         gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0);
     },
-    _renderImage:function(target, image, rect){
+    _renderImage:function(target, image, mx, my, mw, mh, x, y, w, h){
         if(!image.texture){
             this.activeShader.uploadTexture(image);
         }
         
-        var gl = this.gl, w = target.width, h = target.height, px = -target.pivotX, py = -target.pivotY;
-        var vertexs = this._createVertexs(image, rect[0], rect[1], rect[2], rect[3], px, py, w, h);
+        var gl = this.gl, px = -target.pivotX*w, py = -target.pivotY*h;
+        var vertexs = this._createVertexs(image, mx, my, mw, mh, px + x, py + y, w, h);
         var index = this.batchIndex * this.positionStride;
         var positions = this.vertex;
         var alpha = target.__webglRenderAlpha;
@@ -2623,7 +2731,6 @@ var WebGLRenderer = Class.create(/** @lends WebGLRenderer.prototype */{
         var mtx = view.__webglWorldMatrix;
         var cos = 1, sin = 0,
             rotation = 360-view.rotation % 360,
-            pivotX = view.pivotX, pivotY = view.pivotY,
             scaleX = view.scaleX, scaleY = view.scaleY;
 
         if(rotation){
@@ -2639,6 +2746,13 @@ var WebGLRenderer = Class.create(/** @lends WebGLRenderer.prototype */{
         mtx.tx = view.x;
         mtx.ty = -view.y;
 
+
+        var ppx = ancestor.pivotX, ppy = ancestor.pivotY;
+        if(ppx != 0 || ppy != 0){
+            mtx.tx -= ppx * ancestor.width;
+            mtx.ty += ppx * ancestor.height;
+        }
+        
         var aMtx = ancestor.__webglWorldMatrix;
         mtx.concat(aMtx.a, aMtx.b, aMtx.c, aMtx.d, aMtx.tx, aMtx.ty);
     }
@@ -2886,7 +3000,27 @@ var CanvasRenderer = Class.create(/** @lends CanvasRenderer.prototype */{
         var drawable = target.drawable, image = drawable && drawable.image;
         if(image){
             var rect = drawable.rect;
-            ctx.drawImage(image, rect[0], rect[1], rect[2], rect[3], 0, 0, w, h);
+            var split = drawable.split;
+            if(split){
+                var sx = (rect && rect[0]) || 0, 
+                    sy = (rect && rect[1]) || 0,
+                    sw = (rect && rect[2]) || image.width,
+                    sh = (rect && rect[3]) || image.height,
+                    w1 = split[0],w2=split[2],w3=sw-w1-w2,
+                    h1 =split[1],h2=split[3],h3=sh-h1-h2;
+                
+                ctx.drawImage(image, sx+0,     sy+0,      w1, h1, 0,      0,      w1,     h1);
+                ctx.drawImage(image, sx+w1,    sy+0,      w2, h1, w1,     0,      w-w1-w3,h1);
+                ctx.drawImage(image, sx+w1+w2, sy+0,      w3, h1, w-w3,   0,      w3,     h1);
+                ctx.drawImage(image, sx+0,     sy+h1,     w1, h2, 0,      h1,     w1,     h-h1-h3);
+                ctx.drawImage(image, sx+w1,    sy+h1,     w2, h2, w1,     h1,     w-w1-w3,h-h1-h3);
+                ctx.drawImage(image, sx+w1+w2, sy+h1,     w3, h2, w-w3,   h1,     w3,     h-h1-h3);
+                ctx.drawImage(image, sx+0,     sy+h1+h2,  w1, h3, 0,      h-h3,   w1,     h3);
+                ctx.drawImage(image, sx+w1,    sy+h1+h2,  w2, h3, w1,     h-h3,   w-w1-w3,h3);
+                ctx.drawImage(image, sx+w1+w2, sy+h1+h2,  w3, h3, w-w3,   h-h3,   w3,     h3);
+            }else{
+                ctx.drawImage(image, rect[0], rect[1], rect[2], rect[3], 0, 0, w, h);
+            }
         }
     },
 
@@ -2906,6 +3040,8 @@ var CanvasRenderer = Class.create(/** @lends CanvasRenderer.prototype */{
         var ctx = this.context,
             x = target.x,
             y = target.y,
+            w = target.width, 
+            h = target.height,
             scaleX = target.scaleX,
             scaleY = target.scaleY,
             pivotX = target.pivotX,
@@ -2921,8 +3057,7 @@ var CanvasRenderer = Class.create(/** @lends CanvasRenderer.prototype */{
             }else{
                 var parent = target.parent;
                 if(parent){
-                    var w = target.width, h = target.height,
-                        pw = parent.width, ph = parent.height;
+                    var pw = parent.width, ph = parent.height;
                     switch(align){
                         case 'TL':
                             x = 0;
@@ -2968,7 +3103,7 @@ var CanvasRenderer = Class.create(/** @lends CanvasRenderer.prototype */{
         if(x != 0 || y != 0) ctx.translate(x, y);
         if(rotation != 0) ctx.rotate(rotation * Math.PI / 180);
         if(scaleX != 1 || scaleY != 1) ctx.scale(scaleX, scaleY);
-        if(pivotX != 0 || pivotY != 0) ctx.translate(-pivotX, -pivotY);
+        if(pivotX != 0 || pivotY != 0) ctx.translate(-pivotX*w, -pivotY*h);
         if(target.alpha > 0) ctx.globalAlpha *= target.alpha;
     },
 
@@ -3187,8 +3322,8 @@ return Class.create(/** @lends View.prototype */{
                 sin = Math.sin(r);
             }
 
-            if(pivotX != 0) mtx.tx -= pivotX;
-            if(pivotY != 0) mtx.ty -= pivotY;
+            if(pivotX != 0) mtx.tx -= pivotX*o.width;
+            if(pivotY != 0) mtx.ty -= pivotY*o.height;
             mtx.concat(cos*scaleX, sin*scaleX, -sin*scaleY, cos*scaleY, o.x, o.y);
         }
         return mtx;
@@ -3419,7 +3554,9 @@ Hilo.View = View;
 var Hilo = window.Hilo;
 var Class = Hilo.Class;
 var Drawable = Hilo.Drawable;
+var DOMRenderer = Hilo.DOMRenderer;
 var View = Hilo.View;
+
 /**
  * Hilo
  * Copyright 2015 alibaba.com
@@ -3434,6 +3571,7 @@ var View = Hilo.View;
  * @requires hilo/core/Hilo
  * @requires hilo/core/Class
  * @requires hilo/core/Drawable
+ * @requires hilo/renderer/DOMRenderer
  * @requires hilo/view/View
  * @property {Array} children 容器的子元素列表。只读。
  * @property {Boolean} pointerChildren 指示容器的子元素是否能响应用户交互事件。默认为true。
@@ -3763,7 +3901,7 @@ var Container = Class.create(/** @lends Container.prototype */{
                 this._domContainerUpdate();
             }
             if(this.drawable && this.drawable.domElement){
-                Hilo.setElementStyleByView(this, true);
+                DOMRenderer.setElementStyleByView(this, true);
             }
         }
 
@@ -3858,9 +3996,9 @@ var WebGLRenderer = Hilo.WebGLRenderer;
  * @requires hilo/renderer/CanvasRenderer
  * @requires hilo/renderer/DOMRenderer
  * @requires hilo/renderer/WebGLRenderer
+ * @property {Boolean} paused 指示舞台是否暂停刷新渲染。
  * @property {HTMLCanvasElement|HTMLElement} canvas 舞台所对应的画布。它可以是一个canvas或一个普通的div。只读属性。
  * @property {Renderer} renderer 舞台渲染器。只读属性。
- * @property {Boolean} paused 指示舞台是否暂停刷新渲染。
  * @property {Object} viewport 舞台内容在页面中的渲染区域。包含的属性有：left、top、width、height。只读属性。
  */
 var Stage = Class.create(/** @lends Stage.prototype */{
@@ -3879,10 +4017,14 @@ var Stage = Class.create(/** @lends Stage.prototype */{
         this.resize(width, height, true);
     },
 
+    pivotX: 0,
+    pivotY: 0,
+    paused: false,
+    
     canvas: null,
     renderer: null,
-    paused: false,
     viewport: null,
+    
 
     /**
      * @private
@@ -4184,8 +4326,8 @@ var Drawable = Hilo.Drawable;
      * @param {Array} rect 指定位图在图片image的矩形区域。
      * @returns {Bitmap} 位图本身。
      */
-    setImage: function(image, rect){
-        this.drawable.init({image:image, rect:rect});
+    setImage: function(image, rect, split){
+        this.drawable.init({image:image, rect:rect, split:split});
         if(rect){
             this.width = rect[2];
             this.height = rect[3];
@@ -4482,11 +4624,9 @@ var Drawable = Hilo.Drawable;
  * @property {Object} overState 按钮经过状态的属性或其drawable的属性的集合。
  * @property {Object} downState 按钮按下状态的属性或其drawable的属性的集合。
  * @property {Object} disabledState 按钮不可用状态的属性或其drawable的属性的集合。
- * @property {String} state 按钮的状态名称。它是 Button.UP|OVER|DOWN|DISABLED 之一。 只读属性。
- * @property {Boolean} enabled 指示按钮是否可用。默认为true。只读属性。
  * @property {Boolean} useHandCursor 当设置为true时，表示指针滑过按钮上方时是否显示手形光标。默认为true。
  */
- var Button = Class.create(/** @lends Button.prototype */{
+var Button = Class.create(/** @lends Button.prototype */{
     Extends: View,
     constructor: function(properties){
         properties = properties || {};
@@ -4501,10 +4641,10 @@ var Drawable = Hilo.Drawable;
     overState: null,
     downState: null,
     disabledState: null,
-
-    state: null,
-    enabled: true,
     useHandCursor: true,
+
+    _state: null,
+    _enabled: true,
 
     /**
      * 设置按钮是否可用。
@@ -4512,7 +4652,7 @@ var Drawable = Hilo.Drawable;
      * @returns {Button} 按钮本身。
      */
     setEnabled: function(enabled){
-        if(this.enabled != enabled){
+        if(this._enabled != enabled){
             if(!enabled){
                 this.setState(Button.DISABLED);
             }else{
@@ -4528,9 +4668,9 @@ var Drawable = Hilo.Drawable;
      * @returns {Button} 按钮本身。
      */
     setState: function(state){
-        if(this.state !== state){
-            this.state = state;
-            this.pointerEnabled = this.enabled = state !== Button.DISABLED;
+        if(this._state !== state){
+            this._state = state;
+            this._enabled = this.pointerEnabled = (state !== Button.DISABLED);
 
             var stateObj;
             switch(state){
@@ -4594,7 +4734,7 @@ var Drawable = Hilo.Drawable;
         DOWN: 'down',
         DISABLED: 'disabled'
     }
- });
+});
 Hilo.Button = Button;
 })(window);/**
  * Hilo 1.0.0 for standalone
@@ -4631,8 +4771,8 @@ var _cacheContext = _cacheCanvas && _cacheCanvas.getContext('2d');
  * @property {String} color 指定使用的字体颜色。
  * @property {String} textAlign 指定文本的对齐方式。可以是以下任意一个值：'left', 'center', 'right' 。
  * @property {Boolean} outline 指定文本是绘制边框还是填充。
- * @property {Number} lineSpacing 指定文本的行距。单位为像素。默认值为0。
- * @property {String} font 文本的字体CSS样式。只读属性。设置字体样式请用setFont方法。
+ * @property {Number} spacing 指定文本的行距。单位为像素。默认值为0。
+ * @property {String} font 文本的字体CSS样式。
  */
 var Text = Class.create(/** @lends Text.prototype */{
     Extends: View,
@@ -4641,6 +4781,8 @@ var Text = Class.create(/** @lends Text.prototype */{
         this.id = this.id || properties.id || Hilo.getUid('Text');
         Text.superclass.constructor.call(this, properties);
 
+        this.font = properties.font || '16px arial';
+        
         if(properties.width){
             this.width = properties.width;
             this._autoWidth = false;
@@ -4655,32 +4797,17 @@ var Text = Class.create(/** @lends Text.prototype */{
             this.height = 256;
             this._autoHeight = true;
         }
-        
-        this.setFont(properties.font || '16px arial');
     },
-
+    
+    font: null, 
     text: null,
     color: '#000',
     textAlign: null,
     outline: false,
-    lineSpacing: 0,
-    font: null, //ready-only
+    spacing: 0,
+    dirty:true, //强制更新
     
     
-    /**
-     * 设置文本的字体CSS样式。
-     * @param {String} font 要设置的字体CSS样式。
-     * @returns {Text} Text对象本身。链式调用支持。
-     */
-    setFont: function(font){
-        var me = this;
-        if(me.font !== font){
-            me.font = font;
-            me._fontHeight = Text.measureFontHeight(font);
-        }
-        return me;
-    },
-
     /**
      * 覆盖渲染方法。
      * @private
@@ -4689,6 +4816,7 @@ var Text = Class.create(/** @lends Text.prototype */{
         var me = this, canvas = renderer.canvas;
         
         if(renderer.renderType === 'canvas'){
+            me._check();
             me._draw(renderer.context);
         }
         else if(renderer.renderType === 'dom'){
@@ -4697,9 +4825,9 @@ var Text = Class.create(/** @lends Text.prototype */{
             var style = domElement.style;
             if(me._check()){
                 style.font = me.font;
-                style.textAlign = me.textAlign;
                 style.color = me.color;
-                style.lineHeight = (me._fontHeight + me.lineSpacing) + 'px';
+                style.textAlign = me.textAlign;
+                style.lineHeight = (me._fontHeight + me.spacing) + 'px';
                 style['word-break'] = 'break-all';
                 style['word-wrap'] = 'break-word';
                 
@@ -4743,7 +4871,7 @@ var Text = Class.create(/** @lends Text.prototype */{
         //find and draw all explicit lines
         var lines = text.split(/\r\n|\r|\n|<br(?:[ \/])*>/);
         var width = 0, height = 0;
-        var lineHeight = me._fontHeight + me.lineSpacing;
+        var lineHeight = me._fontHeight + me.spacing;
         var i, line, w;
         var drawLines = [];
 
@@ -4830,21 +4958,24 @@ var Text = Class.create(/** @lends Text.prototype */{
     },
     
     _check: function(){
-        var dirty = true;
-        
+        if(this._font !== this.font){
+            this._font = this.font;
+            this._fontHeight = Text.measureFontHeight(this.font);
+            return true;
+        }
         if(this._text !== this.text){
             this._text = this.text;
-            dirty = true;
+            return true;
         }
         if(this._color !== this.color){
             this._color = this.color;
-            dirty = true;
+            return true;
         }
-        if(this._font !== this.font){
-            this._font = this.font;
-            dirty = true;
+        if(this._textAlign !== this.textAlign){
+            this._textAlign = this.textAlign;
+            return true;
         }
-        return dirty;
+        return this.dirty;
     },
     
     /**
@@ -4922,28 +5053,21 @@ var Label = Class.create(/** @lends Label.prototype */{
         Label.superclass.constructor.call(this, properties);
 
         if(properties.font){
-            this.setFont(properties.font);
+            this.genGlyphs(properties.font);
         }
         
-        var text = properties.text + '';
-        if(text){
-            this.text = '';
-            this.setText(text);
-        }
-
         this.pointerChildren = false; //disable user events for single letters
     },
 
     glyphs: null,
     spacing: 0,
     text: '',
-    textAlign:'left',
     
      /**
       * 设置图片字体
       * font: {text, width, height, image, rect}
       */
-    setFont:function(font){
+    genGlyphs:function(font){
         var str = font.text.toString(),
             image = font.image,
             rect = font.rect || [0,0,image.width,image.height],
@@ -4960,77 +5084,54 @@ var Label = Class.create(/** @lends Label.prototype */{
             }
         }
         this.glyphs = glyphs;
-
-        if(this.text != ''){
-            var str = this.text;
-            this.text = '';
-            this.setText(str);
-        }
     },
 
     /**
-     * 设置位图文本的文本内容。
-     * @param {String} text 要设置的文本内容。
-     * @returns {Label} Label对象本身。链式调用支持。
+     * 覆盖渲染方法。
+     * @private
      */
-    setText: function(text){
-        var me = this, str = text.toString(), len = str.length;
-        if(me.text == str) return;
-        me.text = str;
-
-        var i, charStr, charGlyph, charObj, width = 0, height = 0, left = 0;
-        for(i = 0; i < len; i++){
-            charStr = str.charAt(i);
-            charGlyph = me.glyphs[charStr];
-            if(charGlyph){
-                left = width + (width > 0 ? me.spacing : 0);
-                if(me.children[i]){
-                    charObj = me.children[i];
-                    charObj.setImage(charGlyph.image, charGlyph.rect);
+    render: function(renderer, delta){
+        
+        var me = this, str = me.text.toString(), spc = me.spacing, gls = me.glyphs;
+        if(me._text != str || me._spacing != spc || me._glyphs != gls){
+            me._text = str;
+            me._spacing = spc;
+            me._glyphs = gls;
+                                
+            var len = str.length;
+            var i, charStr, charGlyph, charObj, width = 0, height = 0, left = 0;
+            for(i = 0; i < len; i++){
+                charStr = str.charAt(i);
+                charGlyph = gls[charStr];
+                
+                if(charGlyph){
+                    left = width + (width > 0 ? me.spacing : 0);
+                    if(me.children[i]){
+                        charObj = me.children[i];
+                        charObj.setImage(charGlyph.image, charGlyph.rect);
+                    }
+                    else{
+                        charObj = Label._createBitmap(charGlyph);
+                        me.addChild(charObj);
+                    }
+                    charObj.x = left;
+                    width = left + charGlyph.rect[2];
+                    height = Math.max(height, charGlyph.rect[3]);
                 }
-                else{
-                    charObj = Label._createBitmap(charGlyph);
-                    me.addChild(charObj);
-                }
-                charObj.x = left;
-                width = left + charGlyph.rect[2];
-                height = Math.max(height, charGlyph.rect[3]);
             }
-        }
 
-        for(i = me.children.length - 1;i >= len;i --){
-            Label._releaseBitmap(me.children[i]);
-            me.removeChild(me.children[i]);
-        }
+            for(i = me.children.length - 1;i >= len;i --){
+                Label._releaseBitmap(me.children[i]);
+                me.removeChild(me.children[i]);
+            }
 
-        me.width = width;
-        me.height = height;
-        this.setTextAlign();
-        return me;
+            me.width = width;
+            me.height = height;
+        }
+        
+        Label.superclass.render.call(this, renderer, delta);
     },
     
-
-     /**
-     * 设置位图文本的对齐方式。
-     * @param textAlign 文本对齐方式，值为left、center、right
-     * @returns {Label} Label对象本身。链式调用支持。
-     */
-    setTextAlign:function(textAlign){
-        this.textAlign = textAlign||this.textAlign;
-        switch(this.textAlign){
-            case "center":
-                this.pivotX = this.width * .5;
-                break;
-            case "right":
-                this.pivotX = this.width;
-                break;
-            case "left":
-            default:
-                this.pivotX = 0;
-                break;
-        }
-        return this;
-    },
 
    
     Statics:/** @lends Label */{
@@ -5065,8 +5166,9 @@ Hilo.Label = Label;
 (function(window){
 var Hilo = window.Hilo;
 var Class = Hilo.Class;
-var View = Hilo.View;
 var Drawable = Hilo.Drawable;
+var DOMRenderer = Hilo.DOMRenderer;
+var View = Hilo.View;
 /**
  * Hilo
  * Copyright 2015 alibaba.com
@@ -5085,6 +5187,7 @@ var Drawable = Hilo.Drawable;
  * @requires hilo/core/Hilo
  * @requires hilo/core/Class
  * @requires hilo/core/Drawable
+ * @requires hilo/renderer/DOMRenderer
  * @requires hilo/view/View
  */
 var Element = Class.create(/** @lends Element.prototype */{
@@ -5095,9 +5198,11 @@ var Element = Class.create(/** @lends Element.prototype */{
         Element.superclass.constructor.call(this, properties);
 
         this.drawable = new Drawable();
-        var elem = this.drawable.domElement = (properties.element || Hilo.createElement('div', {style: {position: 'absolute'}}));
-        elem.id = this.id;
+        this.element = this.drawable.domElement = (properties.element || Hilo.createElement('div', {style: {position: 'absolute'}}));
+        this.element.id = this.id;
     },
+    
+    element:null,
 
     /**
      * 覆盖渲染方法。
@@ -5116,9 +5221,12 @@ var Element = Class.create(/** @lends Element.prototype */{
      * @private
      */
     render: function(renderer, delta){
-        var canvas = renderer.canvas;
+        if(this._element != this.element){
+            this.drawable.domElement = this.element;
+        }
+        
         if(renderer.renderType != 'dom'){
-            Hilo.setElementStyleByView(this);
+            DOMRenderer.setElementStyleByView(this);
         }else{
             renderer.draw(this);
         }

@@ -33,8 +33,8 @@ var _cacheContext = _cacheCanvas && _cacheCanvas.getContext('2d');
  * @property {String} color 指定使用的字体颜色。
  * @property {String} textAlign 指定文本的对齐方式。可以是以下任意一个值：'left', 'center', 'right' 。
  * @property {Boolean} outline 指定文本是绘制边框还是填充。
- * @property {Number} lineSpacing 指定文本的行距。单位为像素。默认值为0。
- * @property {String} font 文本的字体CSS样式。只读属性。设置字体样式请用setFont方法。
+ * @property {Number} spacing 指定文本的行距。单位为像素。默认值为0。
+ * @property {String} font 文本的字体CSS样式。
  */
 var Text = Class.create(/** @lends Text.prototype */{
     Extends: View,
@@ -43,6 +43,8 @@ var Text = Class.create(/** @lends Text.prototype */{
         this.id = this.id || properties.id || Hilo.getUid('Text');
         Text.superclass.constructor.call(this, properties);
 
+        this.font = properties.font || '16px arial';
+        
         if(properties.width){
             this.width = properties.width;
             this._autoWidth = false;
@@ -57,32 +59,17 @@ var Text = Class.create(/** @lends Text.prototype */{
             this.height = 256;
             this._autoHeight = true;
         }
-        
-        this.setFont(properties.font || '16px arial');
     },
-
+    
+    font: null, 
     text: null,
     color: '#000',
     textAlign: null,
     outline: false,
-    lineSpacing: 0,
-    font: null, //ready-only
+    spacing: 0,
+    dirty:true, //强制更新
     
     
-    /**
-     * 设置文本的字体CSS样式。
-     * @param {String} font 要设置的字体CSS样式。
-     * @returns {Text} Text对象本身。链式调用支持。
-     */
-    setFont: function(font){
-        var me = this;
-        if(me.font !== font){
-            me.font = font;
-            me._fontHeight = Text.measureFontHeight(font);
-        }
-        return me;
-    },
-
     /**
      * 覆盖渲染方法。
      * @private
@@ -91,6 +78,7 @@ var Text = Class.create(/** @lends Text.prototype */{
         var me = this, canvas = renderer.canvas;
         
         if(renderer.renderType === 'canvas'){
+            me._check();
             me._draw(renderer.context);
         }
         else if(renderer.renderType === 'dom'){
@@ -99,9 +87,9 @@ var Text = Class.create(/** @lends Text.prototype */{
             var style = domElement.style;
             if(me._check()){
                 style.font = me.font;
-                style.textAlign = me.textAlign;
                 style.color = me.color;
-                style.lineHeight = (me._fontHeight + me.lineSpacing) + 'px';
+                style.textAlign = me.textAlign;
+                style.lineHeight = (me._fontHeight + me.spacing) + 'px';
                 style['word-break'] = 'break-all';
                 style['word-wrap'] = 'break-word';
                 
@@ -145,7 +133,7 @@ var Text = Class.create(/** @lends Text.prototype */{
         //find and draw all explicit lines
         var lines = text.split(/\r\n|\r|\n|<br(?:[ \/])*>/);
         var width = 0, height = 0;
-        var lineHeight = me._fontHeight + me.lineSpacing;
+        var lineHeight = me._fontHeight + me.spacing;
         var i, line, w;
         var drawLines = [];
 
@@ -232,21 +220,24 @@ var Text = Class.create(/** @lends Text.prototype */{
     },
     
     _check: function(){
-        var dirty = true;
-        
+        if(this._font !== this.font){
+            this._font = this.font;
+            this._fontHeight = Text.measureFontHeight(this.font);
+            return true;
+        }
         if(this._text !== this.text){
             this._text = this.text;
-            dirty = true;
+            return true;
         }
         if(this._color !== this.color){
             this._color = this.color;
-            dirty = true;
+            return true;
         }
-        if(this._font !== this.font){
-            this._font = this.font;
-            dirty = true;
+        if(this._textAlign !== this.textAlign){
+            this._textAlign = this.textAlign;
+            return true;
         }
-        return dirty;
+        return this.dirty;
     },
     
     /**

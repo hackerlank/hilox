@@ -40,11 +40,9 @@ var Drawable = Hilo.Drawable;
  * @property {Object} overState 按钮经过状态的属性或其drawable的属性的集合。
  * @property {Object} downState 按钮按下状态的属性或其drawable的属性的集合。
  * @property {Object} disabledState 按钮不可用状态的属性或其drawable的属性的集合。
- * @property {String} state 按钮的状态名称。它是 Button.UP|OVER|DOWN|DISABLED 之一。 只读属性。
- * @property {Boolean} enabled 指示按钮是否可用。默认为true。只读属性。
  * @property {Boolean} useHandCursor 当设置为true时，表示指针滑过按钮上方时是否显示手形光标。默认为true。
  */
- var Button = Class.create(/** @lends Button.prototype */{
+var Button = Class.create(/** @lends Button.prototype */{
     Extends: View,
     constructor: function(properties){
         properties = properties || {};
@@ -59,10 +57,10 @@ var Drawable = Hilo.Drawable;
     overState: null,
     downState: null,
     disabledState: null,
-
-    state: null,
-    enabled: true,
     useHandCursor: true,
+
+    _state: null,
+    _enabled: true,
 
     /**
      * 设置按钮是否可用。
@@ -70,7 +68,7 @@ var Drawable = Hilo.Drawable;
      * @returns {Button} 按钮本身。
      */
     setEnabled: function(enabled){
-        if(this.enabled != enabled){
+        if(this._enabled != enabled){
             if(!enabled){
                 this.setState(Button.DISABLED);
             }else{
@@ -86,9 +84,9 @@ var Drawable = Hilo.Drawable;
      * @returns {Button} 按钮本身。
      */
     setState: function(state){
-        if(this.state !== state){
-            this.state = state;
-            this.pointerEnabled = this.enabled = state !== Button.DISABLED;
+        if(this._state !== state){
+            this._state = state;
+            this._enabled = this.pointerEnabled = (state !== Button.DISABLED);
 
             var stateObj;
             switch(state){
@@ -152,6 +150,6 @@ var Drawable = Hilo.Drawable;
         DOWN: 'down',
         DISABLED: 'disabled'
     }
- });
+});
 Hilo.Button = Button;
 })(window);

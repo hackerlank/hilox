@@ -41,6 +41,8 @@ var Element = Class.create(/** @lends Element.prototype */{
         this.element = this.drawable.domElement = (properties.element || Hilo.createElement('div', {style: {position: 'absolute'}}));
         this.element.id = this.id;
     },
+    
+    element:null,
 
     /**
      * 覆盖渲染方法。
@@ -59,7 +61,10 @@ var Element = Class.create(/** @lends Element.prototype */{
      * @private
      */
     render: function(renderer, delta){
-        var canvas = renderer.canvas;
+        if(this._element != this.element){
+            this.drawable.domElement = this.element;
+        }
+        
         if(renderer.renderType != 'dom'){
             DOMRenderer.setElementStyleByView(this);
         }else{

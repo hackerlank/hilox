@@ -43,9 +43,9 @@ var WebGLRenderer = Hilo.WebGLRenderer;
  * @requires hilo/renderer/CanvasRenderer
  * @requires hilo/renderer/DOMRenderer
  * @requires hilo/renderer/WebGLRenderer
+ * @property {Boolean} paused 指示舞台是否暂停刷新渲染。
  * @property {HTMLCanvasElement|HTMLElement} canvas 舞台所对应的画布。它可以是一个canvas或一个普通的div。只读属性。
  * @property {Renderer} renderer 舞台渲染器。只读属性。
- * @property {Boolean} paused 指示舞台是否暂停刷新渲染。
  * @property {Object} viewport 舞台内容在页面中的渲染区域。包含的属性有：left、top、width、height。只读属性。
  */
 var Stage = Class.create(/** @lends Stage.prototype */{
@@ -64,12 +64,14 @@ var Stage = Class.create(/** @lends Stage.prototype */{
         this.resize(width, height, true);
     },
 
-    canvas: null,
-    renderer: null,
-    paused: false,
-    viewport: null,
     pivotX: 0,
     pivotY: 0,
+    paused: false,
+    
+    canvas: null,
+    renderer: null,
+    viewport: null,
+    
 
     /**
      * @private
