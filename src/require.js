@@ -1,10 +1,25 @@
 var root = "../src/"
-function require(src){
-    var script = document.createElement('script');
-    script.type = 'text/javascript';
-    script.async = false;
-    script.src = root + src + '?t=' + (+new Date());
-    document.getElementsByTagName('head')[0].appendChild(script);
+var list = [];
+var flag = false;
+function require(src, force){
+    if(flag && (!force)){
+        list.push(src);
+        console.log("push",src);
+    }else{
+        flag = true;
+        var script = document.createElement('script');
+        script.type = 'text/javascript';
+        script.async = false;
+        script.src = root + src + '?t=' + (+new Date());
+        script.onload = function(e){
+            if(list.length > 0){
+                require(list.shift(), true);
+            }else{
+                flag = false;
+            }
+        }
+        document.getElementsByTagName('head')[0].appendChild(script);
+    }
 }
 
 
