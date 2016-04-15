@@ -51,22 +51,52 @@ var Button = Class.create(/** @lends Button.prototype */{
         this.id = this.id || properties.id || Hilo.getUid("Button");
         Button.superclass.constructor.call(this, properties);
 
-        this.drawable = new Drawable(properties);
+        this._cfg = properties;
+        this._bmp = new Bitmap({pivotX:0.5,pivotY:0.5}).addTo(this);
+   
         this.setState(Button.UP);
     },
     
-    pivotX: 0.5,
-    pivotY: 0.5,
+    pivotX: 0,
+    pivotY: 0,
 
     downScale: 1.2,
     upState: null,
     downState: null,
     disabledState: null,
     useHandCursor: true,
-
+    
+    _bmp: null,
+    _text: null,
+    _image: null,
     _state: null,
     _enabled: true,
 
+    
+    setText: function(prop){
+        if(typeof prop === 'string'){
+            prop = {text:prop};
+        }
+        if(this._text == null){
+            this._text = new Hilo.Text({
+                pivotX:0.5,
+                pivotY:0.5,
+                textAlign:'center',
+            }).addTo(this);
+        }
+        Hilo.copy(this._text, prop, true);
+    },
+    setImage: function(prop){
+        if(typeof prop === 'string'){
+            prop = {image:prop};
+        }
+        if(this._image == null){
+            this._image = new Bitmap({pivotX:0.5,pivotY:0.5}).addTo(this);
+        }
+        this._image.setImage(prop.image, prop.rect, prop.split);
+        Hilo.copy(this._image, prop, true);
+    },
+    
     /**
      * 设置按钮是否可用。
      * @param {Boolean} enabled 指示按钮是否可用。
@@ -113,8 +143,8 @@ var Button = Class.create(/** @lends Button.prototype */{
             }
 
             if(stateObj){
-                this.drawable.init(stateObj);
-                Hilo.copy(this, stateObj, true);
+                var cfg = this._cfg;
+                this._bmp.setImage(stateObj.image||cfg.image, stateObj.rect||cfg.rect, stateObj.split||cfg.split); 
             }
         }
 
