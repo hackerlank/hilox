@@ -6,8 +6,9 @@
 (function(window){
 var Hilo = window.Hilo;
 var Class = Hilo.Class;
-var View = Hilo.View;
 var Drawable = Hilo.Drawable;
+var Container = Hilo.Container;
+var Bitmap = Hilo.Bitmap;
 /**
  * Hilo
  * Copyright 2015 alibaba.com
@@ -35,7 +36,8 @@ var Drawable = Hilo.Drawable;
  * @requires hilo/core/Hilo
  * @requires hilo/core/Class
  * @requires hilo/core/Drawable
- * @requires hilo/view/View
+ * @requires hilo/view/Container
+ * @requires hilo/view/Bitmap
  * @property {Object} upState 按钮弹起状态的属性或其drawable的属性的集合。
  * @property {Object} overState 按钮经过状态的属性或其drawable的属性的集合。
  * @property {Object} downState 按钮按下状态的属性或其drawable的属性的集合。
@@ -43,7 +45,7 @@ var Drawable = Hilo.Drawable;
  * @property {Boolean} useHandCursor 当设置为true时，表示指针滑过按钮上方时是否显示手形光标。默认为true。
  */
 var Button = Class.create(/** @lends Button.prototype */{
-    Extends: View,
+    Extends: Container,
     constructor: function(properties){
         properties = properties || {};
         this.id = this.id || properties.id || Hilo.getUid("Button");
@@ -52,9 +54,12 @@ var Button = Class.create(/** @lends Button.prototype */{
         this.drawable = new Drawable(properties);
         this.setState(Button.UP);
     },
+    
+    pivotX: 0.5,
+    pivotY: 0.5,
 
+    downScale: 1.2,
     upState: null,
-    overState: null,
     downState: null,
     disabledState: null,
     useHandCursor: true,
@@ -91,12 +96,15 @@ var Button = Class.create(/** @lends Button.prototype */{
             var stateObj;
             switch(state){
                 case Button.UP:
+                    this.scaleX = this._downScaleX || this.scaleX;
+                    this.scaleY = this._downScaleY || this.scaleY;
                     stateObj = this.upState;
                     break;
-                case Button.OVER:
-                    stateObj = this.overState;
-                    break;
                 case Button.DOWN:
+                    this._downScaleX = this.scaleX;
+                    this._downScaleY = this.scaleY;
+                    this.scaleX = this.downScale;
+                    this.scaleY = this.downScale;
                     stateObj = this.downState;
                     break;
                 case Button.DISABLED:
@@ -118,25 +126,14 @@ var Button = Class.create(/** @lends Button.prototype */{
      * @private
      */
     fire: function(type, detail){
-        if(!this.enabled) return;
+        if(!this._enabled) return;
 
         var evtType = typeof type === 'string' ? type : type.type;
         switch(evtType){
-            case 'mousedown':
-            case 'touchstart':
-            case 'touchmove':
+            case Hilo.event.POINTER_START:
                 this.setState(Button.DOWN);
                 break;
-            case "mouseover":
-                this.setState(Button.OVER);
-                break;
-            case 'mouseup':
-                if(this.overState) this.setState(Button.OVER);
-                else if(this.upState) this.setState(Button.UP);
-                break;
-            case 'touchend':
-            case 'touchout':
-            case 'mouseout':
+            case Hilo.event.POINTER_END:
                 this.setState(Button.UP);
                 break;
         }
@@ -146,7 +143,6 @@ var Button = Class.create(/** @lends Button.prototype */{
 
     Statics: /** @lends Button */ {
         UP: 'up',
-        OVER: 'over',
         DOWN: 'down',
         DISABLED: 'disabled'
     }

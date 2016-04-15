@@ -4,7 +4,6 @@ var flag = false;
 function require(src, force){
     if(flag && (!force)){
         list.push(src);
-        console.log("push",src);
     }else{
         flag = true;
         var script = document.createElement('script');
