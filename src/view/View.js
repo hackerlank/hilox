@@ -59,11 +59,11 @@ return Class.create(/** @lends View.prototype */{
     height: 0,
     alpha: 1,
     rotation: 0,
-    visible: true,
     pivotX: 0,
     pivotY: 0,
     scaleX: 1,
     scaleY: 1,
+    visible: true,
     pointerEnabled: true,
     background: null,
     align: null,
@@ -71,7 +71,20 @@ return Class.create(/** @lends View.prototype */{
     boundsArea: null,
     parent: null,
     depth: -1,
+    action: null,
 
+    run: function(time, dest, func) {
+        for(k in dest){
+            dest[k] = dest[k]/time;
+        }
+        if(func===true){
+            func = null;
+            time = 99999999;
+        }
+        this.action = this.action || [];
+        this.action.push({time:time,dest:dest,func:func});
+    },
+    
     /**
      * 返回可视对象的舞台引用。若对象没有被添加到舞台，则返回null。
      * @returns {Stage} 可视对象的舞台引用。
@@ -265,13 +278,32 @@ return Class.create(/** @lends View.prototype */{
     },
     
     _update:function(delta){
-        
+        if(this.action){
+            for(var i=this.action.length-1; i>=0; i--){
+                var act = this.action[i];
+                var dt = delta;
+                if(act.time <= delta){
+                    dt = act.time;
+                    this.action.splice(i, 1);
+                    if(act.func){
+                        act.func();
+                    }
+                }
+                act.time -= dt;
+                for(k in act.dest){
+                    this[k] += act.dest[k] * dt;
+                }
+            }
+            if(this.action.length == 0){
+                this.action = null;
+            }
+        }
         
         if(this.update){
-            return this.update(delta);
+            return (this.update(delta) !== false);
         }
         return true;
-    }
+    },
     /**
      * 冒泡鼠标事件
     */

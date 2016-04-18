@@ -95,7 +95,7 @@ var Ticker = Class.create(/** @lends Ticker.prototype */{
     _tick: function(){
         if(this._paused) return;
         var startTime = +new Date(),
-            deltaTime = startTime - this._lastTime,
+            deltaTime = (startTime - this._lastTime)/1000,
             tickers = this._tickers;
 
         //calculates the real fps

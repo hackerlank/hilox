@@ -123,8 +123,8 @@ function onLoad(){
                 y: 100 * (i%8),
                 duration: 100,
                 loop: true,
-                onUpdate: function(){
-                    if(this.x > stage.width - this.pivotX){
+                update: function(){
+                    if(this.x > stage.width){
                         this.x = 0;
                     }else{
                         this.x += 3;
@@ -259,7 +259,11 @@ function onLoad(){
                 x: 50,
                 y: 70
             }).addTo(stage);
-
+blueRect.run(1,{rotation:360}, true);
+var func=function(a, b){
+    blueRect.run(1,{alpha:a}, function(){ func(b,a); })
+};
+func(-0.5,0.5);
             //dom element
             var yellowRect = new Hilo.Element({
                 id: 'yellowRect',
