@@ -2410,7 +2410,6 @@ var WebGLRenderer = Class.create(/** @lends WebGLRenderer.prototype */{
             image = drawable && drawable.image,
             bg = target.background;
         
-
         if(this.batchIndex >= this.maxBatchNum || bg){
             this._renderBatches();
         }
@@ -2484,11 +2483,12 @@ var WebGLRenderer = Class.create(/** @lends WebGLRenderer.prototype */{
             this._renderBatches();
         }
         if(target.clipChildren){
+            this._renderBatches();
+            
             var gl = this.gl;
             this.stencilLevel = this.stencilLevel - 1;
             gl.stencilFunc(gl.LEQUAL,this.stencilLevel,0xFF);
             if(this.stencilLevel == 0){
-                this._renderBatches();
                 gl.disable(this.gl.STENCIL_TEST);
             }
         }
@@ -3340,9 +3340,17 @@ return Class.create(/** @lends View.prototype */{
         var bound = this.getBounds(),
             hit = x >= bound.x && x <= bound.x + bound.width &&
                   y >= bound.y && y <= bound.y + bound.height;
-
+        
         if(hit && usePolyCollision){
             hit = pointInPolygon(x, y, bound);
+        }
+        
+        var p = this.parent;
+        while(hit && p){
+            if(p.clipChildren){
+                hit = p.hitTestPoint(x, y, usePolyCollision);
+            }
+            p = p.parent;
         }
         return hit;
     },
@@ -3360,6 +3368,13 @@ return Class.create(/** @lends View.prototype */{
 
         if(hit && usePolyCollision){
             hit = polygonCollision(b1, b2);
+        }
+        var p = this.parent;
+        while(hit && p){
+            if(p.clipChildren){
+                hit = p.polygonCollision(object, usePolyCollision);
+            }
+            p = this.parent;
         }
         return !!hit;
     },
@@ -4215,6 +4230,7 @@ var Stage = Class.create(/** @lends Stage.prototype */{
         var obj = this.getViewAtPoint(x, y, true, false, true)||this,
             canvas = this.canvas, 
             target = this._eventTarget;
+        
 
         //fire mouseout/touchout event for last event target
         var leave = type === 'mouseout';
@@ -4222,6 +4238,7 @@ var Stage = Class.create(/** @lends Stage.prototype */{
         if(target && (target != obj && (!target.contains || !target.contains(obj))|| leave)){
             var out = (type === 'touchmove') ? 'touchout' :
                       (type === 'mousemove' || leave || !obj) ? 'mouseout' : null;
+            
             if(out) {
                 var outEvent = Hilo.copy({}, event);
                 outEvent.type = out;
@@ -4590,8 +4607,9 @@ Hilo.Sprite = Sprite;
 (function(window){
 var Hilo = window.Hilo;
 var Class = Hilo.Class;
-var View = Hilo.View;
 var Drawable = Hilo.Drawable;
+var Container = Hilo.Container;
+var Bitmap = Hilo.Bitmap;
 /**
  * Hilo
  * Copyright 2015 alibaba.com
@@ -4619,7 +4637,8 @@ var Drawable = Hilo.Drawable;
  * @requires hilo/core/Hilo
  * @requires hilo/core/Class
  * @requires hilo/core/Drawable
- * @requires hilo/view/View
+ * @requires hilo/view/Container
+ * @requires hilo/view/Bitmap
  * @property {Object} upState 按钮弹起状态的属性或其drawable的属性的集合。
  * @property {Object} overState 按钮经过状态的属性或其drawable的属性的集合。
  * @property {Object} downState 按钮按下状态的属性或其drawable的属性的集合。
@@ -4627,25 +4646,58 @@ var Drawable = Hilo.Drawable;
  * @property {Boolean} useHandCursor 当设置为true时，表示指针滑过按钮上方时是否显示手形光标。默认为true。
  */
 var Button = Class.create(/** @lends Button.prototype */{
-    Extends: View,
+    Extends: Container,
     constructor: function(properties){
         properties = properties || {};
         this.id = this.id || properties.id || Hilo.getUid("Button");
         Button.superclass.constructor.call(this, properties);
 
-        this.drawable = new Drawable(properties);
+        this._cfg = properties;
+        this._bmp = new Bitmap({pivotX:0.5,pivotY:0.5}).addTo(this);
+   
         this.setState(Button.UP);
     },
+    
+    pivotX: 0,
+    pivotY: 0,
 
+    downScale: 1.2,
     upState: null,
-    overState: null,
     downState: null,
     disabledState: null,
     useHandCursor: true,
-
+    
+    _bmp: null,
+    _text: null,
+    _image: null,
     _state: null,
     _enabled: true,
 
+    
+    setText: function(prop){
+        if(typeof prop === 'string'){
+            prop = {text:prop};
+        }
+        if(this._text == null){
+            this._text = new Hilo.Text({
+                pivotX:0.5,
+                pivotY:0.5,
+                textAlign:'center',
+            }).addTo(this);
+        }
+        Hilo.copy(this._text, prop, true);
+    },
+    setImage: function(prop){
+        if(typeof prop === 'string'){
+            prop = {image:prop};
+        }
+        if(this._image == null){
+            this._image = new Bitmap({pivotX:0.5,pivotY:0.5}).addTo(this);
+        }
+        this._image.setImage(prop.image, prop.rect, prop.split);
+        Hilo.copy(this._image, prop, true);
+    },
+    
     /**
      * 设置按钮是否可用。
      * @param {Boolean} enabled 指示按钮是否可用。
@@ -4675,12 +4727,15 @@ var Button = Class.create(/** @lends Button.prototype */{
             var stateObj;
             switch(state){
                 case Button.UP:
+                    this.scaleX = this._downScaleX || this.scaleX;
+                    this.scaleY = this._downScaleY || this.scaleY;
                     stateObj = this.upState;
                     break;
-                case Button.OVER:
-                    stateObj = this.overState;
-                    break;
                 case Button.DOWN:
+                    this._downScaleX = this.scaleX;
+                    this._downScaleY = this.scaleY;
+                    this.scaleX = this.downScale;
+                    this.scaleY = this.downScale;
                     stateObj = this.downState;
                     break;
                 case Button.DISABLED:
@@ -4689,8 +4744,8 @@ var Button = Class.create(/** @lends Button.prototype */{
             }
 
             if(stateObj){
-                this.drawable.init(stateObj);
-                Hilo.copy(this, stateObj, true);
+                var cfg = this._cfg;
+                this._bmp.setImage(stateObj.image||cfg.image, stateObj.rect||cfg.rect, stateObj.split||cfg.split); 
             }
         }
 
@@ -4702,25 +4757,20 @@ var Button = Class.create(/** @lends Button.prototype */{
      * @private
      */
     fire: function(type, detail){
-        if(!this.enabled) return;
+        if(!this._enabled) return;
 
         var evtType = typeof type === 'string' ? type : type.type;
         switch(evtType){
             case 'mousedown':
+            //case 'mousemove':
             case 'touchstart':
             case 'touchmove':
                 this.setState(Button.DOWN);
                 break;
-            case "mouseover":
-                this.setState(Button.OVER);
-                break;
             case 'mouseup':
-                if(this.overState) this.setState(Button.OVER);
-                else if(this.upState) this.setState(Button.UP);
-                break;
+            case 'mouseout':
             case 'touchend':
             case 'touchout':
-            case 'mouseout':
                 this.setState(Button.UP);
                 break;
         }
@@ -4730,7 +4780,6 @@ var Button = Class.create(/** @lends Button.prototype */{
 
     Statics: /** @lends Button */ {
         UP: 'up',
-        OVER: 'over',
         DOWN: 'down',
         DISABLED: 'disabled'
     }
@@ -5236,4 +5285,88 @@ Hilo.Element = Element;
 })(window);
 
 
-//hilo game engine 
+/**
+ * Hilo 1.0.0 for standalone
+ * Copyright 2015 alibaba.com
+ * Licensed under the MIT License
+ */
+(function(window){
+var Hilo = window.Hilo;
+var Class = Hilo.Class;
+var Container = Hilo.Container;
+    
+/**
+ * Hilo
+ * Copyright 2015 alibaba.com
+ * Licensed under the MIT License
+ */
+
+/**
+ * @class ScrollContainer
+ * @augments Container
+ * @param {Object} properties 创建对象的属性参数。可包含此类所有可写属性。
+ * @module hilo/view/Label
+ * @requires hilo/core/Class
+ * @requires hilo/core/Hilo
+ * @requires hilo/view/Container
+ */
+var Scroll = Class.create(/** @lends Label.prototype */{
+    Extends: Container,
+    constructor: function(properties){
+        properties = properties || {};
+        this.id = this.id || properties.id || Hilo.getUid('Scroll');
+        Scroll.superclass.constructor.call(this, properties);
+
+        this.clipChildren = true;
+        this.pointerChildren = true;
+        
+        this.view = properties.view || new Container({width:properties.innerWidth || this.width, height:properties.innerHeight ||this.height});
+        this.addChild(this.view);
+    },
+    view:null,
+    
+    /**
+     * overwrite
+     * @private
+     */
+    fire: function(type, detail){
+        var evtType = typeof type === 'string' ? type : type.type;
+ 
+        switch(evtType){
+            case 'mousedown':
+            case 'touchstart':
+                this._scrollFlag = true;
+                this._scrollX = type.stageX;
+                this._scrollY = type.stageY;
+                break;
+            case 'mousemove':
+            case 'touchmove':
+                if(this._scrollFlag){
+                    var view = this.view;
+                    
+                    view.x += type.stageX - this._scrollX;
+                    view.y += type.stageY - this._scrollY;
+                    this._scrollX = type.stageX;
+                    this._scrollY = type.stageY;
+                    
+                    if(view.x > 0) view.x = 0;
+                    if(view.x + view.width < this.width) view.x = this.width - view.width;
+                    if(view.y > 0) view.y = 0;
+                    if(view.y + view.height < this.height) view.y = this.height - view.height;
+                    
+                }
+                break;
+            case 'mouseup':
+            case 'mouseout':
+            case 'touchend':
+            case 'touchout':
+                this._scrollFlag = false;
+                break;
+        }
+
+        return Scroll.superclass.fire.call(this, type, detail);
+    },
+
+});
+Hilo.Scroll = Scroll;
+})(window);//hilo game engine 

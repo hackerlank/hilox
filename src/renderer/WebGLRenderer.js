@@ -122,7 +122,6 @@ var WebGLRenderer = Class.create(/** @lends WebGLRenderer.prototype */{
             image = drawable && drawable.image,
             bg = target.background;
         
-
         if(this.batchIndex >= this.maxBatchNum || bg){
             this._renderBatches();
         }
@@ -196,11 +195,12 @@ var WebGLRenderer = Class.create(/** @lends WebGLRenderer.prototype */{
             this._renderBatches();
         }
         if(target.clipChildren){
+            this._renderBatches();
+            
             var gl = this.gl;
             this.stencilLevel = this.stencilLevel - 1;
             gl.stencilFunc(gl.LEQUAL,this.stencilLevel,0xFF);
             if(this.stencilLevel == 0){
-                this._renderBatches();
                 gl.disable(this.gl.STENCIL_TEST);
             }
         }

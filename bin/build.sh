@@ -31,6 +31,7 @@ cat  ../src/view/Button.js >> $OUT_FILE
 cat  ../src/view/Text.js >> $OUT_FILE
 cat  ../src/view/Label.js >> $OUT_FILE
 cat  ../src/view/Element.js >> $OUT_FILE
+cat  ../src/view/Scroll.js >> $OUT_FILE
 echo "//hilo game engine " >> $OUT_FILE
 
 

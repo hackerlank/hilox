@@ -112,7 +112,7 @@ function onLoad(){
 
 
 
-
+ 
             
     for(var i = 0;i<20;i++){
             
@@ -132,11 +132,11 @@ function onLoad(){
                 }
             }).addTo(stage);
     }	
-        
+      
     var root = new Hilo.Container({
 	        background: '#ffe',
 	        clipChildren: true,
-	        alpha:0.5,
+	        //alpha:0.5,
 	        width:400,
 	        height:400,
 	        x:265,
@@ -152,7 +152,7 @@ function onLoad(){
                 height:300,
                 x:200,
                 y:200,
-                rotation:10
+                rotation:30
             }).addTo(root);
 
     //green button
@@ -188,12 +188,10 @@ function onLoad(){
         width: 64,
         height: 64,
         upState: {rect:[0, 0, 64, 64]},
-        overState: {rect:[64, 0, 64, 64]},
-        downState: {rect:[128, 0, 64, 64]},
         disabledState: {rect:[192, 0, 64, 64]},
-        x: 60,
-        y: 70
-    }).addTo(container);
+        x: 40,
+        y: 300
+    }).addTo(stage);
 
     var mask = new Hilo.View({
         background: '#000',
@@ -226,6 +224,13 @@ function onLoad(){
         console.log(e.type, this);
     });
 
+    blueBtn.setImage({
+                image: 'images/fish.png',
+                rect: [0, 0, 174, 126],
+                scaleX:0.5,
+		scaleY:0.5,
+            });
+    blueBtn.setText({text:"sss",background:'#0ff'});
 
 //static bitmap
             var bmp = new Hilo.Bitmap({
@@ -235,8 +240,8 @@ function onLoad(){
                 width:300,
                 height:300,
                 //scaleX:2,
-                x: 0,
-                y: 20,
+                x: 100,
+                y: 120,
                 background:'#0e0'
             }).addTo(stage);
 
@@ -326,5 +331,22 @@ function onLoad(){
             lbl.onUpdate = function(){
                 lbl.text = ticker.getMeasuredFPS();
 	    }
+
+    var scroll = new Hilo.Scroll({
+                width: 300,
+                height: 300,
+                innerWidth: 300,
+                innerHeight: 600,
+                x: 160,
+                y: 200,
+		background:'#8ff',
+    }).addTo(stage);
+
+    var stext = new Hilo.Text({
+        text: "生命在他里头，这生命就是人的光。光照在黑暗里，黑暗却不接受光。 (《新约.约翰福音》第1章)\nWhat has come into being in him was life, and the life was the light of all people. The light shines in the darkness, and the darkness did not overcome it. John 1-4,5",
+        width: 200,
+        height: 500,
+	background:'#0f0'
+    }).addTo(scroll.view);
 
 }

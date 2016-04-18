@@ -211,9 +211,17 @@ return Class.create(/** @lends View.prototype */{
         var bound = this.getBounds(),
             hit = x >= bound.x && x <= bound.x + bound.width &&
                   y >= bound.y && y <= bound.y + bound.height;
-
+        
         if(hit && usePolyCollision){
             hit = pointInPolygon(x, y, bound);
+        }
+        
+        var p = this.parent;
+        while(hit && p){
+            if(p.clipChildren){
+                hit = p.hitTestPoint(x, y, usePolyCollision);
+            }
+            p = p.parent;
         }
         return hit;
     },
@@ -231,6 +239,13 @@ return Class.create(/** @lends View.prototype */{
 
         if(hit && usePolyCollision){
             hit = polygonCollision(b1, b2);
+        }
+        var p = this.parent;
+        while(hit && p){
+            if(p.clipChildren){
+                hit = p.polygonCollision(object, usePolyCollision);
+            }
+            p = this.parent;
         }
         return !!hit;
     },

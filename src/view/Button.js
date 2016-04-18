@@ -160,10 +160,16 @@ var Button = Class.create(/** @lends Button.prototype */{
 
         var evtType = typeof type === 'string' ? type : type.type;
         switch(evtType){
-            case Hilo.event.POINTER_START:
+            case 'mousedown':
+            //case 'mousemove':
+            case 'touchstart':
+            case 'touchmove':
                 this.setState(Button.DOWN);
                 break;
-            case Hilo.event.POINTER_END:
+            case 'mouseup':
+            case 'mouseout':
+            case 'touchend':
+            case 'touchout':
                 this.setState(Button.UP);
                 break;
         }

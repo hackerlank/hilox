@@ -262,6 +262,7 @@ var Stage = Class.create(/** @lends Stage.prototype */{
         var obj = this.getViewAtPoint(x, y, true, false, true)||this,
             canvas = this.canvas, 
             target = this._eventTarget;
+        
 
         //fire mouseout/touchout event for last event target
         var leave = type === 'mouseout';
@@ -269,6 +270,7 @@ var Stage = Class.create(/** @lends Stage.prototype */{
         if(target && (target != obj && (!target.contains || !target.contains(obj))|| leave)){
             var out = (type === 'touchmove') ? 'touchout' :
                       (type === 'mousemove' || leave || !obj) ? 'mouseout' : null;
+            
             if(out) {
                 var outEvent = Hilo.copy({}, event);
                 outEvent.type = out;
