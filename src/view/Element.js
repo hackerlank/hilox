@@ -49,7 +49,7 @@ var Element = Class.create(/** @lends Element.prototype */{
      * @private
      */
     _render: function(renderer, delta){
-        if(!this.onUpdate || this.onUpdate(delta) !== false){
+        if(this._update(delta)){
             if(this.visible){
                 this.render(renderer, delta);
             }

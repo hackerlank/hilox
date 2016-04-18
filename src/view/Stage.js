@@ -117,7 +117,7 @@ var Stage = Class.create(/** @lends Stage.prototype */{
      * @private
      */
     _render: function(renderer, delta){
-        if((!this.onUpdate || this.onUpdate(delta) !== false) && renderer.startDraw(this)){
+        if(this._update(delta) && renderer.startDraw(this)){
             //transform
             var w = this.width, h = this.height, scaleX = this.scaleX, scaleY = this.scaleY;
             var oldW = this._width, oldH = this._height, oldScaleX = this._scaleX, oldScaleY = this._scaleY;

@@ -257,12 +257,21 @@ return Class.create(/** @lends View.prototype */{
      * @protected
      */
     _render: function(renderer, delta){
-        if((!this.onUpdate || this.onUpdate(delta) !== false) && renderer.startDraw(this)){
+        if(this._update(delta) && renderer.startDraw(this)){
             renderer.transform(this);
             this.render(renderer, delta);
             renderer.endDraw(this);
         }
     },
+    
+    _update:function(delta){
+        
+        
+        if(this.update){
+            return this.update(delta);
+        }
+        return true;
+    }
     /**
      * 冒泡鼠标事件
     */
@@ -298,14 +307,6 @@ return Class.create(/** @lends View.prototype */{
     },
 
     /**
-     * 更新可视对象，此方法会在可视对象渲染之前调用。此函数可以返回一个Boolean值。若返回false，则此对象不会渲染。默认值为null。
-     * 限制：如果在此函数中改变了可视对象在其父容器中的层级，当前渲染帧并不会正确渲染，而是在下一渲染帧。可在其父容器的onUpdate方法中来实现。
-     * @type Function
-     * @default null
-     */
-    onUpdate: null,
-
-    /**
      * 可视对象的具体渲染逻辑。子类可通过覆盖此方法实现自己的渲染。
      * @param {Renderer} renderer 渲染器。
      * @param {Number} delta 渲染时时间偏移量。
@@ -315,6 +316,14 @@ return Class.create(/** @lends View.prototype */{
         renderer.draw(this);
     },
 
+    /**
+     * 更新可视对象，此方法会在可视对象渲染之前调用。此函数可以返回一个Boolean值。若返回false，则此对象不会渲染。默认值为null。
+     * 限制：如果在此函数中改变了可视对象在其父容器中的层级，当前渲染帧并不会正确渲染，而是在下一渲染帧。可在其父容器的update方法中来实现。
+     * @type Function
+     * @default null
+     */
+    update: null,
+    
     /**
      * 为指定的可视对象生成一个包含路径的字符串表示形式。如Stage1.Container2.Bitmap3。
      * @param {View} view 指定的可视对象。
