@@ -52,7 +52,6 @@ var Button = Class.create(/** @lends Button.prototype */{
         Button.superclass.constructor.call(this, properties);
 
         this._cfg = properties;
-        this._bmp = new Bitmap({pivotX:0.5,pivotY:0.5}).addTo(this);
         
         if(properties.text){
             this.setText(properties.text);
@@ -151,6 +150,9 @@ var Button = Class.create(/** @lends Button.prototype */{
 
             if(stateObj){
                 var cfg = this._cfg;
+                if(this._bmp == null){
+                    this._bmp = new Bitmap({pivotX:0.5,pivotY:0.5}).addTo(this);
+                }
                 this._bmp.setImage(stateObj.image||cfg.image, stateObj.rect||cfg.rect, stateObj.split||cfg.split); 
             }
         }

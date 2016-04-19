@@ -353,4 +353,10 @@ func(-0.5,0.5);
 	background:'#0f0'
     }).addTo(scroll.view);
 
+ var btn = new Hilo.Button({
+            text:{text:"创建角色",background:'#0ff'},
+            x: 270,
+            y: 500
+        }).addTo(stage);
+
 }

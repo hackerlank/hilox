@@ -90,9 +90,12 @@ var Text = Class.create(/** @lends Text.prototype */{
                 style.color = me.color;
                 style.textAlign = me.textAlign;
                 style.lineHeight = (me._fontHeight + me.spacing) + 'px';
-                style['word-break'] = 'break-all';
-                style['word-wrap'] = 'break-word';
-                
+                if(me._autoWidth){
+                    style['white-space'] = 'nowrap';  
+                }else{
+                    style['word-break'] = 'break-all';
+                    style['word-wrap'] = 'break-word';
+                }
                 domElement.innerHTML = me.text.replace("\n","</br>");
             }
             renderer.draw(this);
