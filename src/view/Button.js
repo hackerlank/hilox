@@ -53,7 +53,14 @@ var Button = Class.create(/** @lends Button.prototype */{
 
         this._cfg = properties;
         this._bmp = new Bitmap({pivotX:0.5,pivotY:0.5}).addTo(this);
-   
+        
+        if(properties.text){
+            this.setText(properties.text);
+        }
+        if(properties.image){
+            this.setImage(properties.image);
+        }
+        
         this.setState(Button.UP);
     },
     
@@ -77,14 +84,14 @@ var Button = Class.create(/** @lends Button.prototype */{
         if(typeof prop === 'string'){
             prop = {text:prop};
         }
+        prop.pivotX = 0.5;
+        prop.pivotY = 0.5;
+        prop.textAlign = 'center';
         if(this._text == null){
-            this._text = new Hilo.Text({
-                pivotX:0.5,
-                pivotY:0.5,
-                textAlign:'center',
-            }).addTo(this);
+            this._text = new Hilo.Text(prop).addTo(this);
+        }else{
+            Hilo.copy(this._text, prop, true);
         }
-        Hilo.copy(this._text, prop, true);
     },
     setImage: function(prop){
         if(typeof prop === 'string'){
