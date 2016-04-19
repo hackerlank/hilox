@@ -78,7 +78,7 @@ return Class.create({
                 elem = drawable.domElement,
                 style = elem.style,
                 stateCache = obj._stateCache || (obj._stateCache = {});
-
+            
             if(parent){
                 var parentElem = parent.drawable && parent.drawable.domElement;
                 if(parentElem && parentElem != elem.parentNode){
@@ -86,6 +86,10 @@ return Class.create({
                 }
             }
 
+            if(elem != stateCache._domElement){
+                stateCache = obj._stateCache = {};
+                stateCache._domElement = elem;
+            }
             if(this.cacheStateIfChanged(obj, ['visible'], stateCache)){
                 style.display = !obj.visible ? 'none' : '';
             }
