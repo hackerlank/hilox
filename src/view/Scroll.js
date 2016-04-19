@@ -44,7 +44,7 @@ var Scroll = Class.create(/** @lends Label.prototype */{
      */
     fire: function(type, detail){
         var evtType = typeof type === 'string' ? type : type.type;
- 
+
         switch(evtType){
             case 'mousedown':
             case 'touchstart':
@@ -56,17 +56,18 @@ var Scroll = Class.create(/** @lends Label.prototype */{
             case 'touchmove':
                 if(this._scrollFlag){
                     var view = this.view;
-                    
-                    view.x += type.stageX - this._scrollX;
-                    view.y += type.stageY - this._scrollY;
-                    this._scrollX = type.stageX;
-                    this._scrollY = type.stageY;
-                    
-                    if(view.x > 0) view.x = 0;
-                    if(view.x + view.width < this.width) view.x = this.width - view.width;
-                    if(view.y > 0) view.y = 0;
-                    if(view.y + view.height < this.height) view.y = this.height - view.height;
-                    
+                    if(view.width > this.width){
+                        view.x += type.stageX - this._scrollX;
+                        this._scrollX = type.stageX;
+                        if(view.x > 0) view.x = 0;
+                        if(view.x + view.width < this.width) view.x = this.width - view.width;
+                    }
+                    if(view.height > this.height){
+                        view.y += type.stageY - this._scrollY;
+                        this._scrollY = type.stageY;
+                        if(view.y > 0) view.y = 0;
+                        if(view.y + view.height < this.height) view.y = this.height - view.height;
+                    }
                 }
                 break;
             case 'mouseup':

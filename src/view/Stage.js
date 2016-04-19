@@ -275,6 +275,7 @@ var Stage = Class.create(/** @lends Stage.prototype */{
                 var outEvent = Hilo.copy({}, event);
                 outEvent.type = out;
                 outEvent.eventTarget = target;
+                outEvent.nextEventTarget = obj;
                 target._fireMouseEvent(outEvent);
             }
             event.lastEventTarget = target;
