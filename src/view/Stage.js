@@ -298,6 +298,9 @@ var Stage = Class.create(/** @lends Stage.prototype */{
         if(Hilo.browser.android && type === 'touchmove'){
             e.preventDefault();
         }
+        
+        e.castEvent = true;
+        this.fire(e);//stage always fire dom event
     },
 
     
