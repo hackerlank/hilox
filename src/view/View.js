@@ -328,7 +328,7 @@ return Class.create(/** @lends View.prototype */{
         var parent = this.parent;
         if(!e._stopped && !e._stopPropagationed && parent){
             if(e.type == "mouseout" || e.type == "touchout"){
-                //if(!parent.hitTestPoint(e.stageX, e.stageY, true)){
+                //if(!parent.hitTestPoint(e.x, e.y, true)){
                 if(parent != e.nextEventTarget){
                     parent._fireMouseEvent(e);
                 }
