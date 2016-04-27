@@ -155,6 +155,7 @@ return Class.create({
             var rect = drawable.rect;
             var src = image.src;
             if(src !== stateCache.image){
+                flag = true;
                 stateCache.image = src;
                 style.backgroundImage = 'url(' + src + ')';
             }
