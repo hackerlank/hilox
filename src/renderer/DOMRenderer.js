@@ -40,7 +40,8 @@ return Class.create({
         var drawable = (target.drawable = target.drawable || new Drawable());
         drawable.domElement = (drawable.domElement || Hilo.createElement('div', {id:target.id, style: {position: 'absolute'}}));
         var stateCache = target._stateCache || (target._stateCache = {});
-        if(target.visible || DOMRenderer.cacheStateIfChanged(target, ['visible'], stateCache)){
+
+        if(target.visible || target.visible != stateCache.visible){
            return true;
         }else{
            return false;
@@ -256,6 +257,7 @@ return Class.create({
                 if(value != stateCache[name]){
                     stateCache[name] = value;
                     changed = true;
+                    break;
                 }
             }
             return changed;
