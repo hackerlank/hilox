@@ -39,8 +39,12 @@ return Class.create({
     startDraw: function(target){ 
         var drawable = (target.drawable = target.drawable || new Drawable());
         drawable.domElement = (drawable.domElement || Hilo.createElement('div', {id:target.id, style: {position: 'absolute'}}));
-
-        return target.visible; 
+        var stateCache = target._stateCache || (target._stateCache = {});
+        if(target.visible || DOMRenderer.cacheStateIfChanged(target, ['visible'], stateCache)){
+           return true;
+        }else{
+           return false;
+        }
     },
 
     /**
@@ -91,7 +95,7 @@ return Class.create({
                 stateCache._domElement = elem;
             }
             if(this.cacheStateIfChanged(obj, ['visible'], stateCache)){
-                style.display = !obj.visible ? 'none' : '';
+                style.display = (!obj.visible) ? "none" : "";
             }
             if(this.cacheStateIfChanged(obj, ['alpha'], stateCache)){
                 style.opacity = obj.alpha;
