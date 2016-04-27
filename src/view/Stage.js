@@ -237,7 +237,7 @@ var Stage = Class.create(/** @lends Stage.prototype */{
      * @private
      */
     _onDOMEvent: function(e){
-        var type = e.type, event = e, isTouch = type.indexOf('touch') == 0;
+        var type = e.type, isTouch = type.indexOf('touch') == 0;
 
        
         var posObj = e;
@@ -250,14 +250,13 @@ var Stage = Class.create(/** @lends Stage.prototype */{
         var x = posObj.pageX || posObj.clientX, 
             y = posObj.pageY || posObj.clientY,
             viewport = this.viewport || this.updateViewport();
-        event.clientX = x;
-        event.clientY = y;
+
         //calculate clientX/clientY to stageX/stageY
-        event.x = x = (x - viewport.left) / this.scaleX;
-        event.y = y = (y - viewport.top) / this.scaleY;
+        e.stageX = x = (x - viewport.left) / this.scaleX;
+        e.stageY = y = (y - viewport.top) / this.scaleY;
 
         //鼠标事件需要阻止冒泡方法
-        event.stopPropagation = function(){
+        e.stopPropagation = function(){
             this._stopPropagationed = true;
         };
 
@@ -280,13 +279,13 @@ var Stage = Class.create(/** @lends Stage.prototype */{
                 outEvent.nextEventTarget = obj;
                 target._fireMouseEvent(outEvent);
             }
-            event.lastEventTarget = target;
+            e.lastEventTarget = target;
             this._eventTarget = null;
         }
 
         //fire event for current view
         if(obj && obj.pointerEnabled && type !== 'mouseout'){
-            event.eventTarget = this._eventTarget = obj;
+            e.eventTarget = this._eventTarget = obj;
             obj._fireMouseEvent(event);
         }
 

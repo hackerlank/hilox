@@ -49,22 +49,22 @@ var Scroll = Class.create(/** @lends Label.prototype */{
             case 'mousedown':
             case 'touchstart':
                 this._scrollFlag = true;
-                this._scrollX = type.x;
-                this._scrollY = type.y;
+                this._scrollX = type.stageX;
+                this._scrollY = type.stageY;
                 break;
             case 'mousemove':
             case 'touchmove':
                 if(this._scrollFlag){
                     var view = this.view;
                     if(view.width > this.width){
-                        view.x += type.x - this._scrollX;
-                        this._scrollX = type.x;
+                        view.x += type.stageX - this._scrollX;
+                        this._scrollX = type.stageX;
                         if(view.x > 0) view.x = 0;
                         if(view.x + view.width < this.width) view.x = this.width - view.width;
                     }
                     if(view.height > this.height){
-                        view.y += type.y - this._scrollY;
-                        this._scrollY = type.y;
+                        view.y += type.stageY - this._scrollY;
+                        this._scrollY = type.stageY;
                         if(view.y > 0) view.y = 0;
                         if(view.y + view.height < this.height) view.y = this.height - view.height;
                     }
