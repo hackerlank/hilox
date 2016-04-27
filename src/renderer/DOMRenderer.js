@@ -150,7 +150,9 @@ return Class.create({
                 }else{
                     this.setElementStyleByImage(stateCache, obj, flag);
                 }
-
+            }else{
+                stateCache.image = null;
+                style.backgroundImage = null;
             }
         },
         setElementStyleByImage:function(stateCache, obj, flag){
