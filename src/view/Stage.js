@@ -298,7 +298,7 @@ var Stage = Class.create(/** @lends Stage.prototype */{
                       (type === 'mousemove' || leave || !obj) ? 'mouseout' : null;
             
             if(out) {
-                var outEvent = Hilo.copy({}, event);
+                var outEvent = Hilo.copy({}, e);
                 outEvent.type = out;
                 outEvent.eventTarget = target;
                 outEvent.nextEventTarget = obj;
@@ -311,7 +311,7 @@ var Stage = Class.create(/** @lends Stage.prototype */{
         //fire event for current view
         if(obj && obj.pointerEnabled && type !== 'mouseout'){
             e.eventTarget = this._eventTarget = obj;
-            obj._fireMouseEvent(event);
+            obj._fireMouseEvent(e);
         }
 
         //set cursor for current view
