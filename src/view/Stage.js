@@ -206,6 +206,31 @@ var Stage = Class.create(/** @lends Stage.prototype */{
         return viewport;
     },
     
+    enableDOMWheel: function(){
+        if(this._domWheelEnabled){
+            return;
+        }else{
+            this._domWheelEnabled = true;
+        }
+        
+        var me = this;
+        var handler = function(event){
+            var delta = 0;
+            var event = window.event ||event ;
+            var delta = event.detail ?-event.detail/3 : event.wheelDelta/120;
+            
+            me.fire("mousewheel", delta);
+        }
+        
+        var mousewheelevt=Hilo.browser.firefox?"DOMMouseScroll": "mousewheel"//FF doesn't recognize mousewheel as of FF3.x
+        if(document.attachEvent){ //if IE (and Opera depending on user setting)
+            document.attachEvent("on"+mousewheelevt, handler, false);
+        }else if(document.addEventListener){ //WC3 browsers
+            document.addEventListener(mousewheelevt, handler, false);
+        }else{
+            window.onmousewheel = document.onmousewheel = handler;
+        }
+    },
     /**
      * 开启/关闭舞台的DOM事件响应。要让舞台上的可视对象响应用户交互，必须先使用此方法开启舞台的相应事件的响应。
      * @param {String|Array} type 要开启/关闭的事件名称或数组。

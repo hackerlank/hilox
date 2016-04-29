@@ -54,31 +54,51 @@ var Scroll = Class.create(/** @lends Label.prototype */{
                 break;
             case 'mousemove':
             case 'touchmove':
+                this._activeFlag = true;
                 if(this._scrollFlag){
-                    var view = this.view;
-                    if(view.width > this.width){
-                        view.x += type.stageX - this._scrollX;
-                        this._scrollX = type.stageX;
-                        if(view.x > 0) view.x = 0;
-                        if(view.x + view.width < this.width) view.x = this.width - view.width;
-                    }
-                    if(view.height > this.height){
-                        view.y += type.stageY - this._scrollY;
-                        this._scrollY = type.stageY;
-                        if(view.y > 0) view.y = 0;
-                        if(view.y + view.height < this.height) view.y = this.height - view.height;
-                    }
+                    this.scroll(type.stageX - this._scrollX, type.stageY - this._scrollY)
+                    this._scrollX = type.stageX;
+                    this._scrollY = type.stageY;
                 }
                 break;
             case 'mouseup':
             case 'mouseout':
             case 'touchend':
             case 'touchout':
+                this._activeFlag = false;
                 this._scrollFlag = false;
                 break;
         }
 
         return Scroll.superclass.fire.call(this, type, detail);
+    },
+    scroll:function(px, py){
+        var view = this.view;
+        if(view.width > this.width){
+            view.x += px;
+            if(view.x > 0) view.x = 0;
+            if(view.x + view.width < this.width) view.x = this.width - view.width;
+        }
+        if(view.height > this.height){
+            view.y += py;
+            if(view.y > 0) view.y = 0;
+            if(view.y + view.height < this.height) view.y = this.height - view.height;
+        }
+    },
+    enableWheel:function(stage, flag){
+        var me = this;
+        this._wheelFlag = flag;
+        if(!this._wheelFunc){
+            this._wheelFunc = true;
+            
+            stage.enableDOMWheel();
+            stage.on("mousewheel", function(e){
+                if(me._wheelFlag && me._activeFlag){
+                    var p = e.detail * 30;
+                    me.scroll(p, p);
+                }
+            })
+        }
     },
 
 });
