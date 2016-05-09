@@ -28,7 +28,7 @@ var Drawable = Hilo.Drawable;
  * </ul>
  * @property {boolean} paused 判断精灵是否暂停。默认为false。
  * @property {boolean} loop 判断精灵是否可以循环播放。默认为true。
- * @property {number}  duration 精灵动画的帧间隔，单位为毫秒。
+ * @property {number}  duration 精灵动画的帧间隔，单位为秒。
  */
 var Sprite = Class.create(/** @lends Sprite.prototype */{
     Extends: View,
@@ -53,7 +53,7 @@ var Sprite = Class.create(/** @lends Sprite.prototype */{
     _frameCallbacks: null,
     
     loop: true,
-    duration: 1,
+    duration: 0.3,
 
 
     /**
@@ -69,26 +69,54 @@ var Sprite = Class.create(/** @lends Sprite.prototype */{
             this._frameNames = {}
             for(var i = 0, len = frames.length; i < len; i++){
                 var frame = frames[i];
-                if(frame.name) this._frameNames[frame.name] = frame;
+                if(frame.name){
+                    this._frameNames[frame.name] = frame;
+                }
+                
+                if(typeof frame.image === 'string'){
+                    var img = new Image();
+                    img.src = frame.image;
+                    frame.image = img;
+                    if(!frame.rect){
+                        img.onload = function(){
+                            img.onload = null;
+                            frame.rect = [0,0,img.width,img.height];
+                        }
+                    }    
+                }else{
+                    if(!frame.rect){
+                        frame.rect = [0,0,frame.image.width, frame.image.height];
+                    }
+                }
             }
         }else{
-            var image = frames.image, 
-                rect  = frames.rect || [0,0,image.width,image.height], 
-                x = rect[0], 
-                y = rect[1],
-                fw = frames.width || rect[2], 
-                fh = frames.height || rect[3];
-                
-            var xn = Math.floor(rect[2]/fw);
-            var fn = frames.total ||(xn * Math.floor(rect[3]/fh));
-            
-            var ff = [];
-            for(var i = 0; i< fn; i++){
-                var px = x + fw * (i % xn);
-                var py = y + fh * Math.floor(i/xn);
-                ff[i]={image:image,rect:[px, py, fw, fh]};
+            if(typeof frame.image === 'string'){
+                var me = this;
+                frames.image = new Image();
+                frames.image.src = frames.image;
+                frames.image.onload = function(){
+                    frames.image.onload = null;
+                    me.setFrames(frames);
+                }
+            }else{
+                var image = frames.image, 
+                    rect  = frames.rect || [0,0,image.width,image.height], 
+                    x = rect[0], 
+                    y = rect[1],
+                    fw = frames.width || rect[2], 
+                    fh = frames.height || rect[3];
+
+                var xn = Math.floor(rect[2]/fw);
+                var fn = frames.total ||(xn * Math.floor(rect[3]/fh));
+
+                var ff = [];
+                for(var i = 0; i< fn; i++){
+                    var px = x + fw * (i % xn);
+                    var py = y + fh * Math.floor(i/xn);
+                    ff[i]={image:image,rect:[px, py, fw, fh]};
+                }
+                this.setFrames(ff);
             }
-            this.setFrames(ff);
         }
         return this;
     },
@@ -199,9 +227,13 @@ var Sprite = Class.create(/** @lends Sprite.prototype */{
             if(callback) callback.call(this);
 
             var frame = this._frames[frameIndex]
-            this.drawable.init(frame);
-            this.width = frame.rect[2];
-            this.height = frame.rect[3];
+            if(frame){
+                this.drawable.init(frame);
+                if(frame.rect){
+                    this.width = frame.rect[2];
+                    this.height = frame.rect[3];
+                }
+            }
         }
         
         Sprite.superclass._render.call(this, renderer, delta);
@@ -217,15 +249,15 @@ var Sprite = Class.create(/** @lends Sprite.prototype */{
         }
             
         var frames = this._frames, total = frames.length, frame = frames[frameIndex];
-        if(frame.stop || (!this.loop && frameIndex >= total - 1)){
+        if((frame && frame.stop) || (!this.loop && frameIndex >= total - 1)){
             this.stop();
             return frameIndex;
         }
 
-        var elapsed = this._frameElapsed + delta, duration = frame.duration || this.duration;
+        var elapsed = this._frameElapsed + delta, duration = (frame && frame.duration) || this.duration;
         if(elapsed > duration){
             this._frameElapsed = elapsed - duration;
-            if(frame.next != null){
+            if(frame && frame.next != null){
                 //jump to the specified frame
                 frameIndex = this.getFrameIndex(frame.next);
             }else if(frameIndex >= total - 1){
