@@ -27,8 +27,8 @@ var Drawable = Hilo.Drawable;
  * <li><b>frames</b> - 精灵动画的帧数据对象。</li>
  * </ul>
  * @property {boolean} paused 判断精灵是否暂停。默认为false。
- * @property {boolean} loop 判断精灵是否可以循环播放。默认为true。
- * @property {number}  duration 精灵动画的帧间隔，单位为秒。
+ * @property {number} loop 判断精灵是否可以循环播放。循环0。
+ * @property {number} dt 精灵动画的帧间隔，单位为秒。
  */
 var Sprite = Class.create(/** @lends Sprite.prototype */{
     Extends: View,
@@ -39,7 +39,8 @@ var Sprite = Class.create(/** @lends Sprite.prototype */{
 
         this._frames = [];
         this._frameNames = {};
-        this._frameCallbacks = [];
+        this._frameFuncForStop = null;
+        this._frameFuncForIndex = null;
         this.drawable = new Drawable();
         
         if(properties.frames) this.setFrames(properties.frames);
@@ -48,12 +49,15 @@ var Sprite = Class.create(/** @lends Sprite.prototype */{
     _frames: null, //所有帧的集合
     _frameNames: null, //带名字name的帧的集合
     _frameIndex: 0, //当前帧的索引
+    _frameShown: -1,
+    _frameLooped: 0,
     _framePaused: false,
     _frameElapsed: 0, //当前帧持续的时间
-    _frameCallbacks: null,
+    _frameFuncForIndex: null,
+    _frameFuncForStop: null,
     
-    loop: true,
-    duration: 0.3,
+    loop: 0,
+    dt: 0.3,
 
 
     /**
@@ -175,9 +179,9 @@ var Sprite = Class.create(/** @lends Sprite.prototype */{
      * @param {Function} callback 指定回调函数。
      * @returns {Sprite} 精灵本身。
      */
-    setFrameCallback: function(frame, callback){
-        var idx = this.getFrameIndex(frame);
-        if(idx > -1) this._frameCallbacks[idx] = callback;
+    setFrameFunc: function(onStopFunc, onIndexFunc){
+        this._frameFuncForStop = onStop;
+        this._frameFuncForIndex = onIndexFunc;
         return this;
     },
     
@@ -185,8 +189,13 @@ var Sprite = Class.create(/** @lends Sprite.prototype */{
      * 播放精灵动画。
      * @returns {Sprite} Sprite对象本身。
      */
-    play: function(){
+    play: function(restart){
         this._framePaused = false;
+        if(restart){
+            this._frameIndex = 0;
+            this._frameLooped = 0;
+            this._frameElapsed = 0;
+        }
         return this;
     },
 
@@ -196,6 +205,9 @@ var Sprite = Class.create(/** @lends Sprite.prototype */{
      */
     stop: function(){
         this._framePaused = true;
+        if(this._frameFuncForStop){
+            this._frameFuncForStop.call(this);
+        }
         return this;
     },
 
@@ -205,12 +217,13 @@ var Sprite = Class.create(/** @lends Sprite.prototype */{
      * @param {Boolean} pause 指示跳转后是否暂停播放。
      * @returns {Sprite} Sprite对象本身。
      */
-    goto: function(indexOrName, pause){
+    goto: function(indexOrName, pause, looped){
         var total = this._frames.length,
             index = this.getFrameIndex(indexOrName);
 
         this._frameIndex = index < 0 ? 0 : index >= total ? total - 1 : index;
         this._framePaused = pause || this._framePaused;
+        this._frameLooped = looped || this._frameLooped;
         this._frameElapsed = 0;
         return this;
     },
@@ -221,17 +234,22 @@ var Sprite = Class.create(/** @lends Sprite.prototype */{
      */
     _render: function(renderer, delta){
         var frameIndex = this._nextFrame(delta);
-        if(frameIndex != this._frameIndex){
+        if(frameIndex != this._frameShown){
             this._frameIndex = frameIndex;
-            var callback =  this._frameCallbacks[frameIndex];
-            if(callback) callback.call(this);
-
+            this._frameShown = frameIndex;
+            
+            if(this._frameFuncForIndex){
+                this._frameFuncForIndex.call(this, frameIndex);
+            }
             var frame = this._frames[frameIndex]
             if(frame){
                 this.drawable.init(frame);
                 if(frame.rect){
                     this.width = frame.rect[2];
                     this.height = frame.rect[3];
+                }
+                if(frame.func){
+                    frame.func.call(this, frameIndex);
                 }
             }
         }
@@ -247,22 +265,29 @@ var Sprite = Class.create(/** @lends Sprite.prototype */{
         if(this._framePaused){
             return frameIndex;
         }
-            
+        
         var frames = this._frames, total = frames.length, frame = frames[frameIndex];
-        if((frame && frame.stop) || (!this.loop && frameIndex >= total - 1)){
+        if(frame && frame.stop){
             this.stop();
             return frameIndex;
         }
-
-        var elapsed = this._frameElapsed + delta, duration = (frame && frame.duration) || this.duration;
-        if(elapsed > duration){
-            this._frameElapsed = elapsed - duration;
+        
+        var elapsed = this._frameElapsed + delta, dt = (frame && frame.dt) || this.dt;
+        if(elapsed > dt){
+            this._frameElapsed = elapsed - dt;
             if(frame && frame.next != null){
                 //jump to the specified frame
                 frameIndex = this.getFrameIndex(frame.next);
             }else if(frameIndex >= total - 1){
                 //at the end of the frames, go back to first frame
-                frameIndex = 0;
+                if(this.loop == 0){
+                    frameIndex = 0;
+                }else if(this._frameLooped >= this.loop - 1){
+                    this.stop();
+                }else{
+                    frameIndex = 0;
+                    this._frameLooped = this._frameLooped + 1;
+                }
             }else{
                 //normal go forward to next frame
                 frameIndex++;
