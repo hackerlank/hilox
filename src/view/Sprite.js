@@ -72,26 +72,28 @@ var Sprite = Class.create(/** @lends Sprite.prototype */{
             this._frames = frames;
             this._frameNames = {}
             for(var i = 0, len = frames.length; i < len; i++){
-                var frame = frames[i];
-                if(frame.name){
-                    this._frameNames[frame.name] = frame;
-                }
-                
-                if(typeof frame.image === 'string'){
-                    var img = new Image();
-                    img.src = frame.image;
-                    frame.image = img;
-                    if(!frame.rect){
-                        img.onload = function(){
-                            img.onload = null;
-                            frame.rect = [0,0,img.width,img.height];
-                        }
-                    }    
-                }else{
-                    if(!frame.rect){
-                        frame.rect = [0,0,frame.image.width, frame.image.height];
+                (function(){
+                    var frame = frames[i];
+                    if(frame.name){
+                        this._frameNames[frame.name] = frame;
                     }
-                }
+
+                    if(typeof frame.image === 'string'){
+                        var img = new Image();
+                        img.src = frame.image;
+                        frame.image = img;
+                        if(!frame.rect){
+                            img.onload = function(){
+                                img.onload = null;
+                                frame.rect = [0,0,img.width,img.height];
+                            }
+                        }    
+                    }else{
+                        if(!frame.rect){
+                            frame.rect = [0,0,frame.image.width, frame.image.height];
+                        }
+                    }
+                })();
             }
         }else{
             if(typeof frame.image === 'string'){
