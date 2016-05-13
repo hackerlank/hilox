@@ -68,7 +68,7 @@ var CanvasRenderer = Class.create(/** @lends CanvasRenderer.prototype */{
 
         //draw image
         var drawable = target.drawable, image = drawable && drawable.image;
-        if(image){
+        if(image && image.complete){
             var rect = drawable.rect;
             var split = drawable.split;
             if(split){

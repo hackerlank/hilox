@@ -156,7 +156,7 @@ var WebGLRenderer = Class.create(/** @lends WebGLRenderer.prototype */{
             this._renderBackground(target, bg.toColorRgb());
             
         }
-        if(image){
+        if(image && image.complete){
             this.defaultShader.active();
             
             var rect = drawable.rect;
