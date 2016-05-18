@@ -96,7 +96,7 @@ var Text = Class.create(/** @lends Text.prototype */{
                     style['word-break'] = 'break-all';
                     style['word-wrap'] = 'break-word';
                 }
-                domElement.innerHTML = me.text.replace("\n","</br>");
+                domElement.innerHTML = me.text.toString().replace("\n","</br>");
             }
             renderer.draw(this);
             if(me._autoWidth){

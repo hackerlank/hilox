@@ -182,7 +182,7 @@ var Sprite = Class.create(/** @lends Sprite.prototype */{
      * @returns {Sprite} 精灵本身。
      */
     setFrameFunc: function(onStopFunc, onIndexFunc){
-        this._frameFuncForStop = onStop;
+        this._frameFuncForStop = onStopFunc;
         this._frameFuncForIndex = onIndexFunc;
         return this;
     },

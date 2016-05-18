@@ -458,15 +458,16 @@ var WebGLRenderer = Class.create(/** @lends WebGLRenderer.prototype */{
         mtx.tx = view.x;
         mtx.ty = -view.y;
 
+        if(ancestor){
+            var ppx = ancestor.pivotX, ppy = ancestor.pivotY;
+            if(ppx != 0 || ppy != 0){
+                mtx.tx -= ppx * ancestor.width;
+                mtx.ty += ppx * ancestor.height;
+            }
 
-        var ppx = ancestor.pivotX, ppy = ancestor.pivotY;
-        if(ppx != 0 || ppy != 0){
-            mtx.tx -= ppx * ancestor.width;
-            mtx.ty += ppx * ancestor.height;
+            var aMtx = ancestor.__webglWorldMatrix;
+            mtx.concat(aMtx.a, aMtx.b, aMtx.c, aMtx.d, aMtx.tx, aMtx.ty);
         }
-        
-        var aMtx = ancestor.__webglWorldMatrix;
-        mtx.concat(aMtx.a, aMtx.b, aMtx.c, aMtx.d, aMtx.tx, aMtx.ty);
     }
 });
 
